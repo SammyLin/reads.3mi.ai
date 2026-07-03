@@ -1,0 +1,50 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout>
+  <div style="max-width: 400px; margin: 120px auto; padding: 32px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg);">
+    <h1 style="margin-bottom: 24px; font-size: 24px;">🔐 後台登入</h1>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="password">管理員密碼</label>
+        <input type="password" id="password" name="password" required autofocus />
+      </div>
+      <div id="error" style="color: var(--accent-red); margin-bottom: 12px; font-size: 13px; display: none;"></div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">登入</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form') as HTMLFormElement;
+    const errorEl = document.getElementById('error')!;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.style.display = 'none';
+
+      const password = (document.getElementById('password') as HTMLInputElement).value;
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          errorEl.textContent = data.error || '登入失敗';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        window.location.href = '/admin';
+      } catch (err) {
+        errorEl.textContent = '網路錯誤';
+        errorEl.style.display = 'block';
+      }
+    });
+  </script>
+</AdminLayout>

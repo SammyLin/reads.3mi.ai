@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+// 純靜態 shell — 內容由 client-side JS fetch
+const description = 'Sammy 的 AI 工程筆記 — 架構、工具、實戰、安全。';
+---
+
+<BaseLayout title="news.3mi.ai" description={description}>
+  <div id="home-content">
+    <div class="card text-secondary" style="padding: 40px; text-align: center;">
+      <p>載入中...</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+async function loadHome() {
+  const container = document.getElementById('home-content');
+  if (!container) return;
+
+  try {
+    const [articlesRes, categoriesRes] = await Promise.all([
+      fetch('/api/articles'),
+      fetch('/api/categories'),
+    ]);
+
+    const { articles = [] } = await articlesRes.json();
+    const { categories = [] } = await categoriesRes.json();
+
+    if (articles.length === 0) {
+      container.innerHTML = `
+        <div class="card text-secondary" style="padding: 40px; text-align: center;">
+          <p>還沒有文章。</p>
+          <p style="margin-top: 8px;"><a href="/admin/new">寫第一篇 →</a></p>
+        </div>`;
+      return;
+    }
+
+    // Render articles
+    const articlesHtml = articles.map(article => `
+      <a href="/post/${article.slug}" class="card" style="display: block; text-decoration: none; margin-bottom: 16px;">
+        ${article.category ? `<span style="font-size: 12px; color: ${article.category.color};">${article.category.icon} ${article.category.name}</span>` : ''}
+        <h3 style="margin: 4px 0; color: var(--text);">${article.title}</h3>
+        <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">${article.excerpt || ''}</p>
+        <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+          ${article.published_at ? new Date(article.published_at).toLocaleDateString('zh-TW') : ''}
+          ${article.reading_time ? ` · ${article.reading_time} 分鐘閱讀` : ''}
+        </div>
+      </a>
+    `).join('');
+
+    // Render categories sidebar
+    const categoriesHtml = categories.length > 0
+      ? categories.map(cat => `
+          <a href="/category/${cat.slug}" style="display: flex; align-items: center; gap: 8px; padding: 6px 0; color: var(--text-secondary); text-decoration: none; font-size: 14px;">
+            <span>${cat.icon}</span>
+            <span>${cat.name}</span>
+            <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">${cat.article_count || 0}</span>
+          </a>
+        `).join('')
+      : '<p style="color: var(--text-muted); font-size: 14px;">尚無分類</p>';
+
+    container.innerHTML = `
+      <section style="margin-bottom: 32px;">
+        <h2 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">
+          📝 最新文章
+        </h2>
+        <div>${articlesHtml}</div>
+      </section>
+      <aside>
+        <h2 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">
+          📁 分類
+        </h2>
+        ${categoriesHtml}
+      </aside>
+    `;
+  } catch (err) {
+    console.error('Failed to load home data:', err);
+    container.innerHTML = `
+      <div class="card text-secondary" style="padding: 40px; text-align: center;">
+        <p>載入失敗，請稍後再試。</p>
+      </div>`;
+  }
+}
+
+loadHome();
+</script>

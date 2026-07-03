@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getDB } from '../../lib/db';
+
+export async function getStaticPaths() {
+  // Build-time: hardcode known tag slugs
+  // Update when new tags are added
+  return [
+    { params: { slug: 'llm' } },
+    { params: { slug: 'agent' } },
+    { params: { slug: 'architecture' } },
+    { params: { slug: 'cloudflare' } },
+    { params: { slug: 'astro' } },
+    { params: { slug: 'typescript' } },
+    { params: { slug: 'meta' } },
+    { params: { slug: 'security' } },
+    { params: { slug: 'tooling' } },
+  ];
+}
+
+const { slug } = Astro.params;
+---
+
+<BaseLayout title="標籤" description="">
+  <header style="margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+    <h1 style="font-size: 28px;" id="tag-title">🏷 標籤</h1>
+    <p class="text-secondary" style="margin-top: 8px;">共 <span id="article-count">...</span> 篇文章</p>
+  </header>
+
+  <div id="articles-container">
+    <div class="card text-secondary" style="padding: 40px; text-align: center;">
+      <p>載入中...</p>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ slug }}>
+    window.__TAG_SLUG__ = slug;
+  </script>
+</BaseLayout>
+
+<script>
+async function loadTag() {
+  const slug = window.__TAG_SLUG__;
+  const titleEl = document.getElementById('tag-title');
+  const countEl = document.getElementById('article-count');
+  const container = document.getElementById('articles-container');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/articles');
+    const { articles = [] } = await res.json();
+
+    const filtered = articles.filter((a) =>
+      (a.tags || []).some((t) => t.slug === slug)
+    );
+
+    document.title = `#${slug} — news.3mi.ai`;
+    if (titleEl) titleEl.textContent = `🏷 #${slug}`;
+    if (countEl) countEl.textContent = String(filtered.length);
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">這個標籤還沒有文章。</div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map((article) => `
+      <a href="/post/${article.slug}" class="card" style="display: block; text-decoration: none; margin-bottom: 16px; padding: 16px;">
+        ${article.category ? `<span style="font-size: 12px; color: ${article.category.color};">${article.category.icon} ${article.category.name}</span>` : ''}
+        <h3 style="margin: 4px 0; color: var(--text);">${escapeHtml(article.title)}</h3>
+        <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">${escapeHtml(article.excerpt || '')}</p>
+        <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+          ${article.published_at ? new Date(article.published_at).toLocaleDateString('zh-TW') : ''}
+          ${article.reading_time ? ` · ${article.reading_time} 分鐘閱讀` : ''}
+        </div>
+      </a>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load tag:', err);
+    container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">載入失敗。</div>';
+  }
+}
+
+function escapeHtml(s) {
+  if (typeof s !== 'string') return '';
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+loadTag();
+</script>

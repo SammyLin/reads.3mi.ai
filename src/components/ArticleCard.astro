@@ -1,0 +1,55 @@
+---
+import type { ArticleWithMeta } from '../lib/db';
+
+interface Props {
+  article: ArticleWithMeta;
+  featured?: boolean;
+}
+
+const { article, featured = false } = Astro.props;
+
+const dateStr = article.published_at
+  ? new Date(article.published_at).toISOString().slice(0, 10)
+  : '';
+
+const excerpt = article.excerpt || '';
+---
+
+{featured ? (
+  <article class="featured-card">
+    <span class="featured-label">⭐ 焦點</span>
+    <h2><a href={`/post/${article.slug}`}>{article.title}</a></h2>
+    {excerpt && <p class="excerpt">{excerpt}</p>}
+    <div class="meta">
+      {article.category && (
+        <a href={`/category/${article.category.slug}`} class="tag" style={`background: ${article.category.color}22; color: ${article.category.color};`}>
+          {article.category.icon} {article.category.name}
+        </a>
+      )}
+      <span class="text-muted">· {dateStr}</span>
+      <span class="text-muted">· {article.reading_time} 分鐘</span>
+    </div>
+  </article>
+) : (
+  <article class="card article-card">
+    <div class="meta">
+      {article.category && (
+        <a href={`/category/${article.category.slug}`} class="tag" style={`background: ${article.category.color}22; color: ${article.category.color};`}>
+          {article.category.icon} {article.category.name}
+        </a>
+      )}
+      <span class="text-muted">· {dateStr}</span>
+      <span class="text-muted">· {article.reading_time} 分鐘</span>
+    </div>
+    <h2><a href={`/post/${article.slug}`}>{article.title}</a></h2>
+    {excerpt && <p class="excerpt">{excerpt}</p>}
+    <div class="footer">
+      <div>
+        {article.tags.slice(0, 3).map((tag) => (
+          <a href={`/tag/${tag.slug}`} class="tag" style="margin-right: 4px;">#{tag.name}</a>
+        ))}
+      </div>
+      <span class="text-muted">👁 {article.view_count}</span>
+    </div>
+  </article>
+)}

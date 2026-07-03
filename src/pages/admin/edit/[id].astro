@@ -1,0 +1,183 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getArticleBySlug, listCategories, getDB } from '../../../lib/db';
+import { isAuthenticated } from '../../../lib/auth';
+
+const isAuthed = await isAuthenticated(Astro.request, (Astro.locals as any)?.runtime?.env?.JWT_SECRET || 'fallback-secret');
+if (!isAuthed) return Astro.redirect('/admin/login');
+
+const { id } = Astro.params;
+
+let article: any = null;
+let categories: any[] = [];
+
+try {
+  const db = getDB(Astro.locals);
+  // 透過 slug 找 — 但 id 是數字，這邊先嘗試兩種
+  if (id && /^\d+$/.test(id)) {
+    const r = await db.prepare(`SELECT slug FROM articles WHERE id = ?`).bind(parseInt(id)).first();
+    if (r) article = await getArticleBySlug(db, r.slug as string);
+  } else if (id) {
+    article = await getArticleBySlug(db, id);
+  }
+  categories = await listCategories(db);
+} catch (e) {
+  console.error(e);
+}
+
+if (!article) {
+  return Astro.redirect('/admin');
+}
+---
+
+<AdminLayout>
+  <div style="max-width: 1100px; margin: 0 auto; padding: 32px 24px;">
+    <header style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+      <a href="/admin" class="btn btn-ghost">← 返回</a>
+      <h1 style="font-size: 24px;">✏️ 編輯文章</h1>
+    </header>
+
+    <form id="article-form" data-id={article.id} style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px;">
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+        <div>
+          <div class="form-group">
+            <label>標題</label>
+            <input type="text" id="title" name="title" required value={article.title} />
+          </div>
+          <div class="form-group">
+            <label>Slug</label>
+            <input type="text" id="slug" name="slug" value={article.slug} />
+          </div>
+          <div class="form-group">
+            <label>摘要</label>
+            <textarea id="excerpt" name="excerpt" rows="2">{article.excerpt || ''}</textarea>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; justify-content: space-between;">
+              <span>Markdown 內容</span>
+              <span style="font-size: 12px; color: var(--text-muted);" id="char-count">{article.content_md.length} 字</span>
+            </label>
+            <textarea id="content_md" name="content_md" rows="20" required style="font-family: var(--font-mono); font-size: 13px;" oninput="updateCount()">{article.content_md}</textarea>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label>狀態</label>
+            <select id="status" name="status">
+              <option value="draft" selected={article.status === 'draft'}>草稿</option>
+              <option value="published" selected={article.status === 'published'}>發佈</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>分類</label>
+            <select id="category_id" name="category_id">
+              <option value="">無</option>
+              {categories.map((c) => (
+                <option value={c.id} selected={article.category_id === c.id}>{c.icon} {c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>標籤（逗號分隔）</label>
+            <input type="text" id="tags" name="tags" value={article.tags.map((t: any) => t.slug).join(', ')} />
+          </div>
+
+          <div class="form-group">
+            <label>封面圖 URL</label>
+            <input type="text" id="cover_image" name="cover_image" value={article.cover_image || ''} />
+            <button type="button" id="upload-btn" class="btn" style="margin-top: 8px; width: 100%; font-size: 12px;">📤 上傳圖片</button>
+            <input type="file" id="file-input" accept="image/*" style="display: none;" />
+            {article.cover_image && <img src={article.cover_image} style="margin-top: 8px; border-radius: 4px;" />}
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="is_featured" name="is_featured" checked={!!article.is_featured} />
+              <span>設為焦點文章</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">更新</button>
+          <div id="result" style="margin-top: 12px; font-size: 13px;"></div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const contentEl = document.getElementById('content_md') as HTMLTextAreaElement;
+    const charCount = document.getElementById('char-count')!;
+    const form = document.getElementById('article-form') as HTMLFormElement;
+    const result = document.getElementById('result')!;
+    const articleId = form.dataset.id;
+
+    (window as any).updateCount = () => {
+      charCount.textContent = `${contentEl.value.length} 字`;
+    };
+
+    document.getElementById('upload-btn')?.addEventListener('click', () => {
+      (document.getElementById('file-input') as HTMLInputElement).click();
+    });
+
+    document.getElementById('file-input')?.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('file', file);
+      result.textContent = '上傳中...';
+      result.style.color = 'var(--accent)';
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('上傳失敗');
+        const data = await res.json();
+        (document.getElementById('cover_image') as HTMLInputElement).value = data.url;
+        result.textContent = '✅ 上傳成功';
+        result.style.color = 'var(--accent-green)';
+      } catch (err: any) {
+        result.textContent = '❌ ' + err.message;
+        result.style.color = 'var(--accent-red)';
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      result.textContent = '更新中...';
+      result.style.color = 'var(--accent)';
+
+      const fd = new FormData(form);
+      const body: any = {
+        title: fd.get('title'),
+        slug: fd.get('slug'),
+        excerpt: fd.get('excerpt'),
+        content_md: fd.get('content_md'),
+        cover_image: fd.get('cover_image'),
+        status: fd.get('status'),
+        category_id: fd.get('category_id') ? parseInt(fd.get('category_id') as string) : null,
+        tags: (fd.get('tags') as string || '').split(',').map((s) => s.trim()).filter(Boolean),
+        is_featured: (document.getElementById('is_featured') as HTMLInputElement).checked,
+      };
+
+      try {
+        const res = await fetch(`/api/articles?id=${articleId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || '更新失敗');
+        }
+        result.innerHTML = '✅ 已更新 — <a href="/admin">返回列表</a> · <a href={`/post/${body.slug}`} target="_blank">檢視</a>';
+        result.style.color = 'var(--accent-green)';
+      } catch (err: any) {
+        result.textContent = '❌ ' + err.message;
+        result.style.color = 'var(--accent-red)';
+      }
+    });
+  </script>
+</AdminLayout>

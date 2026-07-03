@@ -1,0 +1,76 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  showSidebars?: boolean;
+}
+
+const { title, description = 'Sammy 的 AI 工程筆記', ogImage, showSidebars = true } = Astro.props;
+
+const fullTitle = title === 'news.3mi.ai' ? title : `${title} · news.3mi.ai`;
+const canonical = new URL(Astro.url.pathname, Astro.site || 'https://news.3mi.ai').toString();
+---
+
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="generator" content={Astro.generator} />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate" type="application/rss+xml" title="news.3mi.ai RSS" href="/rss.xml" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:site_name" content="news.3mi.ai" />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+
+  <!-- highlight.js theme -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css" />
+</head>
+<body>
+  <Header />
+  <main class="container">
+    {showSidebars ? (
+      <div class="site-grid">
+        <aside class="sidebar sidebar-left">
+          <Sidebar position="left" />
+        </aside>
+        <div class="content">
+          <slot />
+        </div>
+        <aside class="sidebar sidebar-right">
+          <Sidebar position="right" />
+        </aside>
+      </div>
+    ) : (
+      <div class="content-full">
+        <slot />
+      </div>
+    )}
+  </main>
+  <Footer />
+
+  <style>
+    .content { min-width: 0; }
+    .content-full { padding: 32px 0; }
+  </style>
+</body>
+</html>

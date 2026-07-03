@@ -1,0 +1,78 @@
+---
+interface Props {
+  position?: 'left' | 'right';
+}
+
+const { position = 'left' } = Astro.props;
+
+const pathname = Astro.url.pathname;
+---
+
+{position === 'left' && (
+  <>
+    <div class="sidebar-section">
+      <h3>📂 分類</h3>
+      <ul class="sidebar-nav" id="sidebar-categories">
+        <li><span class="text-muted" style="padding: 8px 12px; display: block;">載入中...</span></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>📡 訂閱</h3>
+      <ul class="sidebar-nav">
+        <li><a href="/rss.xml">RSS Feed</a></li>
+        <li><a href="/sitemap-index.xml">Sitemap</a></li>
+      </ul>
+    </div>
+  </>
+)}
+
+{position === 'right' && (
+  <>
+    <div class="sidebar-section">
+      <h3>🚀 快速連結</h3>
+      <ul class="sidebar-nav">
+        <li><a href="https://github.com/the3mi" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://3mi.ai" target="_blank" rel="noopener">3mi.ai 主站</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section card">
+      <h3>💡 關於本站</h3>
+      <p class="text-secondary" style="font-size: 13px; line-height: 1.6;">
+        這是 Sammy 的 AI 工程筆記站。內容涵蓋 LLM 工具評測、Agent 架構、雲端部署經驗等。
+      </p>
+      <p class="text-muted" style="font-size: 12px; margin-top: 12px;">
+        Powered by Astro + Cloudflare Pages
+      </p>
+    </div>
+  </>
+)}
+
+<script is:inline define:vars={{ pathname }}>
+  // Load categories client-side
+  (async () => {
+    const list = document.getElementById('sidebar-categories');
+    if (!list) return;
+    try {
+      const res = await fetch('/api/categories');
+      const { categories = [] } = await res.json();
+      if (categories.length === 0) {
+        list.innerHTML = '<li><span class="text-muted" style="padding: 8px 12px; display: block;">尚無分類</span></li>';
+        return;
+      }
+      list.innerHTML = categories.map((cat) => {
+        const isActive = pathname === '/category/' + cat.slug || pathname === '/category/' + cat.slug + '/';
+        return '<li>' +
+          '<a href="/category/' + cat.slug + '"' + (isActive ? ' class="active"' : '') + '>' +
+            '<span>' + cat.icon + '</span>' +
+            '<span>' + cat.name + '</span>' +
+            (cat.article_count > 0 ? '<span class="text-muted" style="margin-left:auto;font-size:12px;">' + cat.article_count + '</span>' : '') +
+          '</a>' +
+        '</li>';
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<li><span class="text-muted" style="padding: 8px 12px; display: block;">載入失敗</span></li>';
+    }
+  })();
+</script>
