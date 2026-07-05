@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getDB } from '../../lib/db';
 
 export async function getStaticPaths() {
   // Build-time: hardcode known slugs (since D1 binding isn't available)
@@ -69,21 +68,75 @@ async function loadCategory() {
       return;
     }
 
-    container.innerHTML = `<div class="collection-list">` + filteredArticles.map((article) => `
-      <a href="/post/${article.slug}" class="collection-card">
-        <div class="collection-card-meta">
-          ${article.category ? `<span style="color: ${article.category.color};">${escapeHtml(article.category.name)}</span>` : ''}
-          <time>${article.published_at ? new Date(article.published_at).toLocaleDateString('zh-TW') : ''}</time>
-          <span>${article.reading_time || 1} 分鐘</span>
-        </div>
-        <h3>${escapeHtml(article.title)}</h3>
-        <p>${escapeHtml(article.excerpt || '')}</p>
-      </a>
-    `).join('') + `</div>`;
+    renderCollection(filteredArticles, getPageFromUrl(), 10, container, '分類文章分頁');
   } catch (err) {
     console.error('Failed to load category:', err);
     container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">載入失敗。</div>';
   }
+}
+
+function renderCollection(articles, page, pageSize, container, label) {
+  const totalPages = Math.max(1, Math.ceil(articles.length / pageSize));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const start = (safePage - 1) * pageSize;
+  const pageArticles = articles.slice(start, start + pageSize);
+
+  container.innerHTML = `<div class="collection-list">` + pageArticles.map(renderCollectionCard).join('') + `</div>
+    <nav class="pagination" id="collection-pagination" aria-label="${label}">${renderPagination(safePage, totalPages, articles.length)}</nav>`;
+
+  const pagination = document.getElementById('collection-pagination');
+  if (pagination) {
+    bindPagination(pagination, (nextPage) => {
+      setPageInUrl(nextPage);
+      renderCollection(articles, nextPage, pageSize, container, label);
+    });
+  }
+}
+
+function renderCollectionCard(article) {
+  return `
+    <a href="/post/${article.slug}" class="collection-card">
+      <div class="collection-card-meta">
+        ${article.category ? `<span style="color: ${article.category.color};">${article.category.icon || ''} ${escapeHtml(article.category.name)}</span>` : ''}
+        <time>${article.published_at ? new Date(article.published_at).toLocaleDateString('zh-TW') : ''}</time>
+        <span>${article.reading_time || 1} 分鐘</span>
+      </div>
+      <h3>${escapeHtml(article.title)}</h3>
+      <p>${escapeHtml(article.excerpt || '')}</p>
+    </a>`;
+}
+
+function renderPagination(page, totalPages, totalItems) {
+  if (totalPages <= 1) return `<span class="pagination-summary">共 ${totalItems} 篇</span>`;
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(`<button type="button" data-page="${i}" ${i === page ? 'class="active" aria-current="page"' : ''}>${i}</button>`);
+  }
+  return `
+    <button type="button" data-page="${Math.max(1, page - 1)}" ${page === 1 ? 'disabled' : ''}>上一頁</button>
+    ${pages.join('')}
+    <button type="button" data-page="${Math.min(totalPages, page + 1)}" ${page === totalPages ? 'disabled' : ''}>下一頁</button>
+    <span class="pagination-summary">第 ${page}/${totalPages} 頁 · 共 ${totalItems} 篇</span>`;
+}
+
+function bindPagination(container, onPage) {
+  container.querySelectorAll('button[data-page]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextPage = Number(button.getAttribute('data-page'));
+      if (Number.isFinite(nextPage)) onPage(nextPage);
+    });
+  });
+}
+
+function getPageFromUrl() {
+  const page = Number(new URL(window.location.href).searchParams.get('page') || '1');
+  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+}
+
+function setPageInUrl(page) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('page', String(page));
+  window.history.replaceState({}, '', url);
 }
 
 function escapeHtml(s) {

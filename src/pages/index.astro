@@ -36,7 +36,8 @@ async function loadHome() {
     }
 
     const featured = articles.find(article => article.is_featured) || articles[0];
-    const latest = articles.slice(0, 18);
+    const pageSize = 8;
+    const initialPage = getPageFromUrl();
     const sourceCount = articles.filter(article => article.source_url).length;
     const topics = [
       { label: 'AI Engineer World', count: 39, href: '/tag/agent' },
@@ -46,26 +47,6 @@ async function loadHome() {
       { label: 'Codex CLI 深度', count: 306, href: '/tag/tooling' },
       { label: '多模態 AI 精讀', count: 12, href: '/archive' },
     ];
-
-    const articlesHtml = latest.map(article => `
-      <article class="aj-post">
-        ${article.cover_image ? `<a href="/post/${article.slug}" class="aj-post-cover"><img src="${escapeAttr(article.cover_image)}" alt="${escapeAttr(article.title)}" /></a>` : `<a href="/post/${article.slug}" class="aj-post-cover aj-post-cover-fallback"><span>${article.category?.icon || 'AI'}</span></a>`}
-        <div class="aj-post-body">
-          <div class="aj-post-meta">
-            ${article.category ? `<a href="/category/${article.category.slug}" class="tag" style="background: ${article.category.color}22; color: ${article.category.color}; border-bottom: none;">${article.category.icon || ''} ${escapeHtml(article.category.name)}</a>` : ''}
-            <time>${formatDate(article.published_at)}</time>
-            <span>${sourceName(article)}</span>
-          </div>
-          <h2><a href="/post/${article.slug}">${escapeHtml(article.title)}</a></h2>
-          <p>${escapeHtml(article.excerpt || '')}</p>
-          <div class="aj-post-footer">
-            <span>閱讀 ${article.reading_time || 1} 分鐘</span>
-            <span>${article.view_count || 0} 次瀏覽</span>
-            ${article.source_url ? `<a href="${escapeAttr(article.source_url)}" target="_blank" rel="noopener">原文連結</a>` : ''}
-          </div>
-        </div>
-      </article>
-    `).join('');
 
     const categoriesHtml = categories.length > 0
       ? categories.map(cat => `
@@ -114,9 +95,12 @@ async function loadHome() {
           <h2>最新發布</h2>
           <a href="/archive">文章存檔</a>
         </div>
-        <div>${articlesHtml}</div>
+        <div id="latest-list"></div>
+        <nav class="pagination" id="latest-pagination" aria-label="最新發布分頁"></nav>
       </section>
     `;
+
+    renderPagedArticles(articles, initialPage, pageSize, 'latest-list', 'latest-pagination');
   } catch (err) {
     console.error('Failed to load home data:', err);
     container.innerHTML = `
@@ -127,6 +111,78 @@ async function loadHome() {
 }
 
 loadHome();
+
+function renderPagedArticles(articles, page, pageSize, listId, paginationId) {
+  const list = document.getElementById(listId);
+  const pagination = document.getElementById(paginationId);
+  if (!list || !pagination) return;
+
+  const totalPages = Math.max(1, Math.ceil(articles.length / pageSize));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const start = (safePage - 1) * pageSize;
+  const pageArticles = articles.slice(start, start + pageSize);
+
+  list.innerHTML = pageArticles.map(renderAjPost).join('');
+  pagination.innerHTML = renderPagination(safePage, totalPages, articles.length);
+  bindPagination(pagination, (nextPage) => {
+    setPageInUrl(nextPage);
+    renderPagedArticles(articles, nextPage, pageSize, listId, paginationId);
+  });
+}
+
+function renderAjPost(article) {
+  return `
+    <article class="aj-post">
+      ${article.cover_image ? `<a href="/post/${article.slug}" class="aj-post-cover"><img src="${escapeAttr(article.cover_image)}" alt="${escapeAttr(article.title)}" /></a>` : `<a href="/post/${article.slug}" class="aj-post-cover aj-post-cover-fallback"><span>${article.category?.icon || 'AI'}</span></a>`}
+      <div class="aj-post-body">
+        <div class="aj-post-meta">
+          ${article.category ? `<a href="/category/${article.category.slug}" class="tag" style="background: ${article.category.color}22; color: ${article.category.color}; border-bottom: none;">${article.category.icon || ''} ${escapeHtml(article.category.name)}</a>` : ''}
+          <time>${formatDate(article.published_at)}</time>
+          <span>${sourceName(article)}</span>
+        </div>
+        <h2><a href="/post/${article.slug}">${escapeHtml(article.title)}</a></h2>
+        <p>${escapeHtml(article.excerpt || '')}</p>
+        <div class="aj-post-footer">
+          <span>閱讀 ${article.reading_time || 1} 分鐘</span>
+          <span>${article.view_count || 0} 次瀏覽</span>
+          ${article.source_url ? `<a href="${escapeAttr(article.source_url)}" target="_blank" rel="noopener">原文連結</a>` : ''}
+        </div>
+      </div>
+    </article>`;
+}
+
+function renderPagination(page, totalPages, totalItems) {
+  if (totalPages <= 1) return `<span class="pagination-summary">共 ${totalItems} 篇</span>`;
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(`<button type="button" data-page="${i}" ${i === page ? 'class="active" aria-current="page"' : ''}>${i}</button>`);
+  }
+  return `
+    <button type="button" data-page="${Math.max(1, page - 1)}" ${page === 1 ? 'disabled' : ''}>上一頁</button>
+    ${pages.join('')}
+    <button type="button" data-page="${Math.min(totalPages, page + 1)}" ${page === totalPages ? 'disabled' : ''}>下一頁</button>
+    <span class="pagination-summary">第 ${page}/${totalPages} 頁 · 共 ${totalItems} 篇</span>`;
+}
+
+function bindPagination(container, onPage) {
+  container.querySelectorAll('button[data-page]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextPage = Number(button.getAttribute('data-page'));
+      if (Number.isFinite(nextPage)) onPage(nextPage);
+    });
+  });
+}
+
+function getPageFromUrl() {
+  const page = Number(new URL(window.location.href).searchParams.get('page') || '1');
+  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+}
+
+function setPageInUrl(page) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('page', String(page));
+  window.history.replaceState({}, '', url);
+}
 
 function formatDate(value) {
   if (!value) return '';
