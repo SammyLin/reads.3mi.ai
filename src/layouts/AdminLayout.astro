@@ -1,5 +1,12 @@
 ---
 import '../styles/global.css';
+import { LayoutDashboard } from 'lucide-astro';
+
+const pathname = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/admin'
+    ? pathname === '/admin'
+    : pathname === href || pathname.startsWith(`${href}/`);
 ---
 
 <!doctype html>
@@ -9,7 +16,140 @@ import '../styles/global.css';
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>後台 · news.3mi.ai</title>
 </head>
-<body style="background: var(--bg-primary);">
-  <slot />
+<body>
+  <header class="admin-topbar">
+    <div class="admin-topbar-inner">
+      <a href="/admin" class="admin-brand">
+        <LayoutDashboard size={18} />
+        <span>後台</span>
+      </a>
+      <nav class="admin-nav">
+        <a href="/admin" class={isActive('/admin') ? 'active' : ''}>文章管理</a>
+        <a href="/admin/new" class={isActive('/admin/new') ? 'active' : ''}>新增文章</a>
+        <a href="/" target="_blank" rel="noopener">看前台</a>
+        <button type="button" class="admin-logout" data-admin-logout>登出</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <slot />
+  </main>
+
+  <script is:inline>
+    document.querySelectorAll('[data-admin-logout]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await fetch('/api/auth', { method: 'DELETE' });
+        } finally {
+          window.location.href = '/admin/login';
+        }
+      });
+    });
+  </script>
+
+  <style>
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+    }
+
+    .admin-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(250, 248, 245, 0.8);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 0 rgba(41, 37, 36, .02), 0 8px 24px rgba(41, 37, 36, .03);
+    }
+    .admin-topbar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 13px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .admin-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      border-bottom: none;
+    }
+    .admin-brand:hover {
+      color: var(--accent);
+      border-bottom: none;
+    }
+    .admin-brand svg { color: var(--accent); }
+
+    .admin-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .admin-nav a {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      border-bottom: none;
+      transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+    }
+    .admin-nav a:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+      border-bottom: none;
+    }
+    .admin-nav a.active {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .admin-logout {
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color var(--dur-fast) var(--ease),
+                  background var(--dur-fast) var(--ease),
+                  border-color var(--dur-fast) var(--ease);
+    }
+    .admin-logout:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+      border-color: var(--border-muted);
+    }
+
+    .admin-main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 72px;
+    }
+
+    @media (max-width: 640px) {
+      .admin-topbar-inner { flex-wrap: wrap; gap: 10px; }
+      .admin-nav { gap: 4px; }
+      .admin-nav a, .admin-logout { padding: 6px 10px; font-size: 13px; }
+      .admin-main { padding: 28px 18px 56px; }
+    }
+  </style>
 </body>
 </html>

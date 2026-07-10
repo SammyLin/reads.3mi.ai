@@ -4,18 +4,60 @@ import { Lock } from 'lucide-astro';
 ---
 
 <AdminLayout>
-  <div style="max-width: 400px; margin: 120px auto; padding: 32px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg);">
-    <h1 style="margin-bottom: 24px; font-size: 24px; display: flex; align-items: center; gap: 8px;"><Lock size={22} /> 後台登入</h1>
+  <div class="login-wrap">
+    <div class="card login-card">
+      <h1 class="login-title"><Lock size={22} /> 後台登入</h1>
+      <p class="login-sub">請輸入管理員密碼以繼續</p>
 
-    <form id="login-form">
-      <div class="form-group">
-        <label for="password">管理員密碼</label>
-        <input type="password" id="password" name="password" required autofocus />
-      </div>
-      <div id="error" style="color: var(--accent-red); margin-bottom: 12px; font-size: 13px; display: none;"></div>
-      <button type="submit" class="btn btn-primary" style="width: 100%;">登入</button>
-    </form>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="password">管理員密碼</label>
+          <input type="password" id="password" name="password" required autofocus />
+        </div>
+        <div id="error" class="login-error"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">登入</button>
+      </form>
+    </div>
   </div>
+
+  <style>
+    .login-wrap {
+      min-height: calc(100vh - 200px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      padding: 32px;
+    }
+    .login-card:hover {
+      transform: none;
+      box-shadow: var(--shadow-sm);
+      border-color: var(--border);
+    }
+    .login-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .login-title svg { color: var(--accent); }
+    .login-sub {
+      margin: 6px 0 24px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .login-error {
+      display: none;
+      color: var(--cat-security);
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+  </style>
 
   <script>
     const form = document.getElementById('login-form') as HTMLFormElement;
