@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { getArticleBySlug, listCategories, getDB } from '../../../lib/db';
+import { getArticleBySlug, listCategories, listSeries, getDB } from '../../../lib/db';
 import { isAuthenticated } from '../../../lib/auth';
 import { Pencil, Upload } from 'lucide-astro';
 
@@ -13,6 +13,7 @@ const { id } = Astro.params;
 
 let article: any = null;
 let categories: any[] = [];
+let seriesList: any[] = [];
 
 try {
   const db = getDB(Astro.locals);
@@ -24,6 +25,7 @@ try {
     article = await getArticleBySlug(db, id);
   }
   categories = await listCategories(db);
+  seriesList = await listSeries(db);
 } catch (e) {
   console.error(e);
 }
@@ -80,6 +82,21 @@ if (!article) {
               <option value={c.id} selected={article.category_id === c.id}>{c.name}</option>
             ))}
           </select>
+        </div>
+
+        <div class="form-group">
+          <label>合集</label>
+          <select id="series_id" name="series_id">
+            <option value="">無</option>
+            {seriesList.map((s) => (
+              <option value={s.id} selected={article.series_id === s.id}>{s.title}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>合集內順序</label>
+          <input type="number" id="series_order" name="series_order" min="0" value={article.series_order || 0} />
         </div>
 
         <div class="form-group">
@@ -230,6 +247,8 @@ if (!article) {
         cover_image: fd.get('cover_image'),
         status: fd.get('status'),
         category_id: fd.get('category_id') ? parseInt(fd.get('category_id') as string) : null,
+        series_id: fd.get('series_id') ? parseInt(fd.get('series_id') as string) : null,
+        series_order: fd.get('series_order') ? parseInt(fd.get('series_order') as string) : 0,
         tags: (fd.get('tags') as string || '').split(',').map((s) => s.trim()).filter(Boolean),
         is_featured: (document.getElementById('is_featured') as HTMLInputElement).checked,
       };

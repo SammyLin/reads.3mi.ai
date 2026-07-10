@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  // Build-time: hardcode known series slugs (D1 binding unavailable at build).
+  // Add new series slugs here and redeploy.
+  return [
+    { params: { slug: 'llm-foundations' } },
+    { params: { slug: 'agent-in-production' } },
+    { params: { slug: 'ai-arch-decisions' } },
+  ];
+}
+
+const { slug } = Astro.params;
+---
+
+<BaseLayout title="合集" description="">
+  <header class="collection-header">
+    <p class="eyebrow">Series</p>
+    <h1 id="series-title">合集</h1>
+    <p id="series-description"></p>
+  </header>
+
+  <div id="series-articles">
+    <div class="card text-secondary" style="padding: 40px; text-align: center;">
+      <p>載入中...</p>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ slug }}>
+    window.__SERIES_SLUG__ = slug;
+  </script>
+</BaseLayout>
+
+<script>
+  const slug = (window as any).__SERIES_SLUG__;
+
+  function escapeHtml(s: string) {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loadSeries() {
+    const container = document.getElementById('series-articles');
+    const titleEl = document.getElementById('series-title');
+    const descEl = document.getElementById('series-description');
+    if (!container) return;
+
+    try {
+      const res = await fetch(`/api/series?slug=${encodeURIComponent(slug)}`);
+      if (!res.ok) throw new Error('not found');
+      const { series, articles = [] } = await res.json();
+
+      if (titleEl) titleEl.textContent = series.title;
+      if (descEl) descEl.textContent = series.description || '';
+      document.title = `${series.title} · news.3mi.ai`;
+
+      if (articles.length === 0) {
+        container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">這個合集還沒有文章。</div>';
+        return;
+      }
+
+      container.innerHTML = '<ol class="series-list">' + articles.map((a: any, i: number) => `
+        <li class="series-item">
+          <a href="/post/${escapeHtml(a.slug)}" class="card series-item-card">
+            <span class="series-item-num">${String(i + 1).padStart(2, '0')}</span>
+            <span class="series-item-body">
+              <span class="series-item-title">${escapeHtml(a.title)}</span>
+              ${a.excerpt ? `<span class="series-item-excerpt">${escapeHtml(a.excerpt)}</span>` : ''}
+              <span class="series-item-meta">${a.reading_time || 1} 分鐘 · 次瀏覽 ${a.view_count || 0}</span>
+            </span>
+          </a>
+        </li>
+      `).join('') + '</ol>';
+    } catch (e) {
+      container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">找不到這個合集。</div>';
+    }
+  }
+
+  loadSeries();
+</script>
+
+<style>
+  .series-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .series-item-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 20px;
+  }
+  .series-item-num {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.3;
+    flex-shrink: 0;
+  }
+  .series-item-body { display: flex; flex-direction: column; gap: 4px; }
+  .series-item-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .series-item-excerpt { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+  .series-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+</style>

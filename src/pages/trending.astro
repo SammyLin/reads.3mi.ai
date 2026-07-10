@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="熱門文章" description="讀者最常看的 AI 工程筆記，依瀏覽數排序。">
+  <header class="collection-header">
+    <p class="eyebrow">Trending</p>
+    <h1>熱門文章</h1>
+    <p>讀者最常看的內容，依瀏覽數排序。</p>
+  </header>
+
+  <div id="trending-content">
+    <div class="card text-secondary" style="padding: 40px; text-align: center;">
+      <p>載入中...</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { categoryIconSvg } from '../lib/categoryIcon';
+
+  function escapeHtml(s: string) {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loadTrending() {
+    const container = document.getElementById('trending-content');
+    if (!container) return;
+    try {
+      const res = await fetch('/api/articles?sort=views&limit=20');
+      const { articles = [] } = await res.json();
+      if (articles.length === 0) {
+        container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">還沒有文章。</div>';
+        return;
+      }
+      container.innerHTML = '<ol class="trending-list">' + articles.map((a: any, i: number) => `
+        <li class="trending-item">
+          <span class="trending-rank">${i + 1}</span>
+          <a href="/post/${escapeHtml(a.slug)}" class="card trending-card">
+            <div class="trending-meta">
+              ${a.category ? `<span style="color:${a.category.color}; display:inline-flex; align-items:center; gap:4px;">${categoryIconSvg(a.category.slug)} ${escapeHtml(a.category.name)}</span>` : ''}
+              <span class="text-muted">次瀏覽 ${a.view_count || 0}</span>
+            </div>
+            <div class="trending-title">${escapeHtml(a.title)}</div>
+            ${a.excerpt ? `<div class="trending-excerpt">${escapeHtml(a.excerpt)}</div>` : ''}
+          </a>
+        </li>
+      `).join('') + '</ol>';
+    } catch (e) {
+      container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">載入失敗。</div>';
+    }
+  }
+
+  loadTrending();
+</script>
+
+<style>
+  .trending-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .trending-item { display: flex; align-items: stretch; gap: 14px; }
+  .trending-rank {
+    flex-shrink: 0;
+    width: 32px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding-top: 16px;
+  }
+  .trending-item:nth-child(-n+3) .trending-rank { color: var(--accent); }
+  .trending-card { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 16px 20px; }
+  .trending-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; }
+  .trending-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .trending-excerpt { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+</style>

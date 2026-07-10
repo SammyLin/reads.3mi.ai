@@ -83,10 +83,11 @@ export const GET: APIRoute = async (context) => {
   const limit = clampInt(url.searchParams.get('limit'), 12, 1, 100);
   const categorySlug = url.searchParams.get('category') || undefined;
   const tagSlug = url.searchParams.get('tag') || undefined;
+  const orderBy = url.searchParams.get('sort') === 'views' ? 'views' as const : undefined;
   const offset = (page - 1) * limit;
   const total = await countPublishedArticles(db, { categorySlug, tagSlug });
   const sourceCount = await countPublishedArticles(db, { withSource: true });
-  const articles = (await listPublishedArticles(db, { categorySlug, tagSlug, limit, offset })).map(summarizeArticle);
+  const articles = (await listPublishedArticles(db, { categorySlug, tagSlug, limit, offset, orderBy })).map(summarizeArticle);
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return new Response(JSON.stringify({
@@ -127,6 +128,8 @@ export const POST: APIRoute = async (context) => {
     source_url: body.source_url,
     source_type: body.source_type,
     category_id: body.category_id,
+    series_id: body.series_id ?? null,
+    series_order: body.series_order || 0,
     status: body.status || 'draft',
     is_featured: body.is_featured ? 1 : 0,
     tags: body.tags || [],

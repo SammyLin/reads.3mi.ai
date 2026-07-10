@@ -22,6 +22,8 @@ export interface Article {
   confidence: number;
   event_key: string | null;
   category_id: number | null;
+  series_id: number | null;
+  series_order: number;
   status: 'draft' | 'published';
   is_featured: number;
   view_count: number;
@@ -55,7 +57,7 @@ export interface ArticleWithMeta extends Article {
 /** 取得發佈文章列表（依發布時間倒序） */
 export async function listPublishedArticles(
   db: D1Database,
-  opts: { categorySlug?: string; tagSlug?: string; limit?: number; offset?: number } = {}
+  opts: { categorySlug?: string; tagSlug?: string; limit?: number; offset?: number; orderBy?: 'date' | 'views' } = {}
 ): Promise<ArticleWithMeta[]> {
   const limit = opts.limit ?? 20;
   const offset = opts.offset ?? 0;
@@ -78,7 +80,9 @@ export async function listPublishedArticles(
     params.push(opts.tagSlug);
   }
 
-  sql += ` ORDER BY a.published_at DESC LIMIT ? OFFSET ?`;
+  sql += opts.orderBy === 'views'
+    ? ` ORDER BY a.view_count DESC, a.published_at DESC LIMIT ? OFFSET ?`
+    : ` ORDER BY a.published_at DESC LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   const result = await db.prepare(sql).bind(...params).all();
@@ -305,6 +309,86 @@ export async function listCategories(db: D1Database): Promise<Category[]> {
   }));
 }
 
+/* ===== 系列 / 合集（像 80aj 主題課程） ===== */
+
+export interface Series {
+  id: number;
+  slug: string;
+  title: string;
+  description: string | null;
+  cover_image: string | null;
+  sort_order: number;
+  article_count?: number;
+}
+
+export interface SeriesArticle {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  cover_image: string | null;
+  reading_time: number;
+  view_count: number;
+  series_order: number;
+  published_at: string | null;
+}
+
+/** 列出所有合集（含已發佈文章數） */
+export async function listSeries(db: D1Database): Promise<Series[]> {
+  const result = await db.prepare(`
+    SELECT s.*, COUNT(a.id) as article_count
+    FROM series s
+    LEFT JOIN articles a ON a.series_id = s.id AND a.status = 'published'
+    GROUP BY s.id
+    ORDER BY s.sort_order ASC, s.id ASC
+  `).all();
+  return (result.results as any[]).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    title: r.title,
+    description: r.description,
+    cover_image: r.cover_image,
+    sort_order: r.sort_order,
+    article_count: r.article_count || 0,
+  }));
+}
+
+/** 取單一合集 + 其排序文章 */
+export async function getSeriesBySlug(
+  db: D1Database,
+  slug: string
+): Promise<{ series: Series; articles: SeriesArticle[] } | null> {
+  const s = await db.prepare(`SELECT * FROM series WHERE slug = ?`).bind(slug).first();
+  if (!s) return null;
+
+  const result = await db.prepare(`
+    SELECT id, slug, title, excerpt, cover_image, reading_time, view_count, series_order, published_at
+    FROM articles
+    WHERE series_id = ? AND status = 'published'
+    ORDER BY series_order ASC, published_at ASC
+  `).bind((s as any).id).all();
+
+  return {
+    series: {
+      id: (s as any).id,
+      slug: (s as any).slug,
+      title: (s as any).title,
+      description: (s as any).description,
+      cover_image: (s as any).cover_image,
+      sort_order: (s as any).sort_order,
+    },
+    articles: result.results as SeriesArticle[],
+  };
+}
+
+/** 熱門文章（依瀏覽數） */
+export async function listTrendingArticles(
+  db: D1Database,
+  limit = 20
+): Promise<ArticleWithMeta[]> {
+  return listPublishedArticles(db, { limit, orderBy: 'views' });
+}
+
 /** 所有文章（後台用） */
 export async function listAllArticles(db: D1Database): Promise<ArticleWithMeta[]> {
   const result = await db.prepare(`
@@ -375,6 +459,8 @@ export async function createArticle(
     confidence?: number;
     event_key?: string;
     category_id?: number;
+    series_id?: number | null;
+    series_order?: number;
     status?: 'draft' | 'published';
     is_featured?: number;
     reading_time?: number;
@@ -412,6 +498,11 @@ export async function createArticle(
 
   const articleId = result.meta.last_row_id;
 
+  if (data.series_id != null) {
+    await db.prepare(`UPDATE articles SET series_id = ?, series_order = ? WHERE id = ?`)
+      .bind(data.series_id, data.series_order || 0, articleId).run();
+  }
+
   if (data.tags && data.tags.length > 0) {
     await setArticleTags(db, articleId, data.tags);
   }
@@ -440,6 +531,8 @@ export async function updateArticle(
     confidence?: number;
     event_key?: string;
     category_id?: number;
+    series_id?: number | null;
+    series_order?: number;
     status?: 'draft' | 'published';
     is_featured?: number;
     reading_time?: number;
@@ -466,6 +559,8 @@ export async function updateArticle(
     confidence: data.confidence,
     event_key: data.event_key,
     category_id: data.category_id,
+    series_id: data.series_id,
+    series_order: data.series_order,
     status: data.status,
     is_featured: data.is_featured,
     reading_time: data.reading_time,

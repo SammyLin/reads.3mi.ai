@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="主題合集" description="把相關文章整理成主題課程與系列，一次讀懂一個題目。">
+  <header class="collection-header">
+    <p class="eyebrow">Topics</p>
+    <h1>主題合集</h1>
+    <p>把相關文章整理成系列課程 — 從入門到實戰，順著讀完一個題目。</p>
+  </header>
+
+  <div id="series-content">
+    <div class="card text-secondary" style="padding: 40px; text-align: center;">
+      <p>載入中...</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  function escapeHtml(s: string) {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loadSeries() {
+    const container = document.getElementById('series-content');
+    if (!container) return;
+    try {
+      const res = await fetch('/api/series');
+      const { series = [] } = await res.json();
+      if (series.length === 0) {
+        container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">還沒有合集。</div>';
+        return;
+      }
+      container.innerHTML = '<div class="series-grid">' + series.map((s: any) => `
+        <a href="/series/${escapeHtml(s.slug)}" class="card series-card">
+          <div class="series-card-count">${s.article_count} 篇</div>
+          <h2>${escapeHtml(s.title)}</h2>
+          ${s.description ? `<p>${escapeHtml(s.description)}</p>` : ''}
+          <span class="series-card-link">看合集 →</span>
+        </a>
+      `).join('') + '</div>';
+    } catch (e) {
+      container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">載入失敗。</div>';
+    }
+  }
+
+  loadSeries();
+</script>
+
+<style>
+  .series-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .series-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+  }
+  .series-card-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .series-card h2 {
+    font-size: 20px;
+    letter-spacing: -.02em;
+  }
+  .series-card p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    flex: 1;
+  }
+  .series-card-link {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+</style>

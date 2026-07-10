@@ -32,6 +32,16 @@ import { PenLine, Star } from 'lucide-astro';
       </select>
     </div>
     <div class="form-group">
+      <label>合集</label>
+      <select id="series">
+        <option value="">無</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>合集內順序</label>
+      <input id="series_order" type="number" min="0" value="0">
+    </div>
+    <div class="form-group">
       <label>Excerpt</label>
       <textarea id="excerpt" rows="2"></textarea>
     </div>
@@ -134,6 +144,17 @@ import { PenLine, Star } from 'lucide-astro';
         catSelect.appendChild(opt);
       });
 
+      // Load series
+      const serRes = await fetch('/api/series');
+      const { series = [] } = await serRes.json();
+      const serSelect = document.getElementById('series');
+      series.forEach((s) => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.title;
+        serSelect.appendChild(opt);
+      });
+
       // Auto-generate slug from title
       document.getElementById('title').addEventListener('input', (e) => {
         const title = e.target.value;
@@ -168,6 +189,8 @@ import { PenLine, Star } from 'lucide-astro';
         excerpt: document.getElementById('excerpt').value,
         content_md: document.getElementById('content_md').value,
         category_id: parseInt(document.getElementById('category').value) || null,
+        series_id: parseInt(document.getElementById('series').value) || null,
+        series_order: parseInt(document.getElementById('series_order').value) || 0,
         is_featured: document.getElementById('is_featured').checked ? 1 : 0,
         status,
       };
