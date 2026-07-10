@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getArticleBySlug, listCategories, getDB } from '../../../lib/db';
 import { isAuthenticated } from '../../../lib/auth';
+import { Pencil, Upload } from 'lucide-astro';
 
 const isAuthed = await isAuthenticated(Astro.request, (Astro.locals as any)?.runtime?.env?.JWT_SECRET || 'fallback-secret');
 if (!isAuthed) return Astro.redirect('/admin/login');
@@ -36,7 +37,7 @@ if (!article) {
   <div style="max-width: 1100px; margin: 0 auto; padding: 32px 24px;">
     <header style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
       <a href="/admin" class="btn btn-ghost">← 返回</a>
-      <h1 style="font-size: 24px;">✏️ 編輯文章</h1>
+      <h1 style="font-size: 24px; display: flex; align-items: center; gap: 8px;"><Pencil size={22} /> 編輯文章</h1>
     </header>
 
     <form id="article-form" data-id={article.id} style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px;">
@@ -90,7 +91,7 @@ if (!article) {
           <div class="form-group">
             <label>封面圖 URL</label>
             <input type="text" id="cover_image" name="cover_image" value={article.cover_image || ''} />
-            <button type="button" id="upload-btn" class="btn" style="margin-top: 8px; width: 100%; font-size: 12px;">📤 上傳圖片</button>
+            <button type="button" id="upload-btn" class="btn" style="margin-top: 8px; width: 100%; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;"><Upload size={14} /> 上傳圖片</button>
             <input type="file" id="file-input" accept="image/*" style="display: none;" />
             {article.cover_image && <img src={article.cover_image} style="margin-top: 8px; border-radius: 4px;" />}
           </div>
@@ -116,6 +117,16 @@ if (!article) {
     const result = document.getElementById('result')!;
     const articleId = form.dataset.id;
 
+    // lucide inline SVG for runtime-built status messages (no emoji)
+    const ICON: Record<string, string> = {
+      check: '<path d="M20 6 9 17l-5-5"/>',
+      x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    };
+    const ic = (n: string) =>
+      `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px">${ICON[n] || ''}</svg>`;
+    const escHtml = (s: string) =>
+      (s || '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
+
     (window as any).updateCount = () => {
       charCount.textContent = `${contentEl.value.length} 字`;
     };
@@ -136,10 +147,10 @@ if (!article) {
         if (!res.ok) throw new Error('上傳失敗');
         const data = await res.json();
         (document.getElementById('cover_image') as HTMLInputElement).value = data.url;
-        result.textContent = '✅ 上傳成功';
+        result.innerHTML = ic('check') + '上傳成功';
         result.style.color = 'var(--accent-green)';
       } catch (err: any) {
-        result.textContent = '❌ ' + err.message;
+        result.innerHTML = ic('x') + escHtml(err.message);
         result.style.color = 'var(--accent-red)';
       }
     });
@@ -172,10 +183,10 @@ if (!article) {
           const err = await res.json();
           throw new Error(err.error || '更新失敗');
         }
-        result.innerHTML = '✅ 已更新 — <a href="/admin">返回列表</a> · <a href={`/post/${body.slug}`} target="_blank">檢視</a>';
+        result.innerHTML = ic('check') + '已更新 — <a href="/admin">返回列表</a> · <a href="/post/' + encodeURIComponent(body.slug) + '" target="_blank">檢視</a>';
         result.style.color = 'var(--accent-green)';
       } catch (err: any) {
-        result.textContent = '❌ ' + err.message;
+        result.innerHTML = ic('x') + escHtml(err.message);
         result.style.color = 'var(--accent-red)';
       }
     });

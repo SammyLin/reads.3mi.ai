@@ -1,11 +1,12 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { PenLine, Star } from 'lucide-astro';
 ---
 
 <AdminLayout>
   <div style="max-width: 900px; margin: 0 auto; padding: 32px 24px;">
     <header style="margin-bottom: 24px;">
-      <h1 style="font-size: 24px;">✍️ 新增文章</h1>
+      <h1 style="font-size: 24px; display: flex; align-items: center; gap: 8px;"><PenLine size={22} /> 新增文章</h1>
       <a href="/admin" class="btn btn-ghost" style="margin-top: 8px;">← 返回列表</a>
     </header>
 
@@ -38,7 +39,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <textarea id="content_md" rows="20" required style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-tertiary); color: var(--text); font-family: monospace;"></textarea>
       </div>
       <div style="margin-bottom: 16px;">
-        <label><input id="is_featured" type="checkbox"> ⭐ 設為焦點文章</label>
+        <label style="display: flex; align-items: center; gap: 6px;"><input id="is_featured" type="checkbox"> <Star size={16} /> 設為焦點文章</label>
       </div>
       <div id="form-error" style="color: var(--accent-red); margin-bottom: 12px; display: none;"></div>
       <div style="display: flex; gap: 8px;">

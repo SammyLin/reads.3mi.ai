@@ -1,10 +1,11 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Lock } from 'lucide-astro';
 ---
 
 <AdminLayout>
   <div style="max-width: 400px; margin: 120px auto; padding: 32px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg);">
-    <h1 style="margin-bottom: 24px; font-size: 24px;">🔐 後台登入</h1>
+    <h1 style="margin-bottom: 24px; font-size: 24px; display: flex; align-items: center; gap: 8px;"><Lock size={22} /> 後台登入</h1>
 
     <form id="login-form">
       <div class="form-group">
