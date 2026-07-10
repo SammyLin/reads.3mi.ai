@@ -48,6 +48,10 @@ async function loadArticle() {
       <article class="prose article-shell">
         <header class="article-header">
           <div class="article-kicker">
+            <span class="decision-badge decision-${article.decision_status || 'watch'}">${({adopt:'Adopt',trial:'Trial',watch:'Watch',avoid:'Avoid'})[article.decision_status] || 'Watch'}</span>
+            <span class="text-muted">${article.content_type || 'signal'}</span>
+            <span class="text-muted">Impact ${article.impact_level || 'medium'}</span>
+            <span class="text-muted">Confidence ${article.confidence ?? 70}%</span>
             ${article.category ? `<a href="/category/${article.category.slug}" class="tag" style="background: ${article.category.color}22; color: ${article.category.color}; border-bottom: none;">${article.category.name}</a>` : ''}
             <time class="text-muted">${dateStr}</time>
             <span class="text-muted">${article.reading_time} 分鐘閱讀</span>
@@ -57,6 +61,7 @@ async function loadArticle() {
           ${article.excerpt ? `<p style="font-size: 16px; color: var(--text-secondary); margin-top: 12px;">${escapeHtml(article.excerpt)}</p>` : ''}
           <div class="article-actions">
             ${article.source_url ? `<a class="source-card" href="${escapeAttr(article.source_url)}" target="_blank" rel="noopener"><span>原文來源</span><strong>${sourceLabel}</strong></a>` : ''}
+            ${article.related_chunk_url ? `<a class="source-card" href="${escapeAttr(article.related_chunk_url)}" target="_blank" rel="noopener"><span>延伸練習 · ChunkUp</span><strong>${escapeHtml(article.related_chunk_title || '練習相關英文語塊')}</strong></a>` : ''}
             <a class="source-card" href="/archive"><span>返回</span><strong>文章存檔</strong></a>
           </div>
         </header>

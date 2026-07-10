@@ -14,6 +14,13 @@ export interface Article {
   cover_image: string | null;
   source_url: string | null;
   source_type: string | null;
+  related_chunk_url: string | null;
+  related_chunk_title: string | null;
+  content_type: 'signal' | 'deep-dive' | 'field-note' | 'decision-card';
+  decision_status: 'adopt' | 'trial' | 'watch' | 'avoid';
+  impact_level: 'low' | 'medium' | 'high';
+  confidence: number;
+  event_key: string | null;
   category_id: number | null;
   status: 'draft' | 'published';
   is_featured: number;
@@ -89,6 +96,13 @@ export async function listPublishedArticles(
     cover_image: r.cover_image,
     source_url: r.source_url,
     source_type: r.source_type,
+    related_chunk_url: r.related_chunk_url,
+    related_chunk_title: r.related_chunk_title,
+    content_type: r.content_type,
+    decision_status: r.decision_status,
+    impact_level: r.impact_level,
+    confidence: r.confidence,
+    event_key: r.event_key,
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
@@ -166,6 +180,13 @@ export async function getFeaturedArticle(db: D1Database): Promise<ArticleWithMet
     cover_image: r.cover_image,
     source_url: r.source_url,
     source_type: r.source_type,
+    related_chunk_url: r.related_chunk_url,
+    related_chunk_title: r.related_chunk_title,
+    content_type: r.content_type,
+    decision_status: r.decision_status,
+    impact_level: r.impact_level,
+    confidence: r.confidence,
+    event_key: r.event_key,
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
@@ -213,6 +234,13 @@ export async function getArticleBySlug(db: D1Database, slug: string): Promise<Ar
     cover_image: r.cover_image,
     source_url: r.source_url,
     source_type: r.source_type,
+    related_chunk_url: r.related_chunk_url,
+    related_chunk_title: r.related_chunk_title,
+    content_type: r.content_type,
+    decision_status: r.decision_status,
+    impact_level: r.impact_level,
+    confidence: r.confidence,
+    event_key: r.event_key,
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
@@ -299,6 +327,13 @@ export async function listAllArticles(db: D1Database): Promise<ArticleWithMeta[]
     cover_image: r.cover_image,
     source_url: r.source_url,
     source_type: r.source_type,
+    related_chunk_url: r.related_chunk_url,
+    related_chunk_title: r.related_chunk_title,
+    content_type: r.content_type,
+    decision_status: r.decision_status,
+    impact_level: r.impact_level,
+    confidence: r.confidence,
+    event_key: r.event_key,
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
@@ -332,6 +367,13 @@ export async function createArticle(
     cover_image?: string;
     source_url?: string;
     source_type?: string;
+    related_chunk_url?: string;
+    related_chunk_title?: string;
+    content_type?: Article['content_type'];
+    decision_status?: Article['decision_status'];
+    impact_level?: Article['impact_level'];
+    confidence?: number;
+    event_key?: string;
     category_id?: number;
     status?: 'draft' | 'published';
     is_featured?: number;
@@ -341,8 +383,8 @@ export async function createArticle(
 ): Promise<number> {
   const now = new Date().toISOString();
   const result = await db.prepare(`
-    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, category_id, status, is_featured, reading_time, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, related_chunk_url, related_chunk_title, content_type, decision_status, impact_level, confidence, event_key, category_id, status, is_featured, reading_time, published_at, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     data.slug,
     data.title,
@@ -352,6 +394,13 @@ export async function createArticle(
     data.cover_image || null,
     data.source_url || null,
     data.source_type || null,
+    data.related_chunk_url || null,
+    data.related_chunk_title || null,
+    data.content_type || 'signal',
+    data.decision_status || 'watch',
+    data.impact_level || 'medium',
+    Math.min(100, Math.max(0, data.confidence ?? 70)),
+    data.event_key || null,
     data.category_id || null,
     data.status || 'draft',
     data.is_featured || 0,
@@ -383,6 +432,13 @@ export async function updateArticle(
     cover_image?: string;
     source_url?: string;
     source_type?: string;
+    related_chunk_url?: string;
+    related_chunk_title?: string;
+    content_type?: Article['content_type'];
+    decision_status?: Article['decision_status'];
+    impact_level?: Article['impact_level'];
+    confidence?: number;
+    event_key?: string;
     category_id?: number;
     status?: 'draft' | 'published';
     is_featured?: number;
@@ -402,6 +458,13 @@ export async function updateArticle(
     cover_image: data.cover_image,
     source_url: data.source_url,
     source_type: data.source_type,
+    related_chunk_url: data.related_chunk_url,
+    related_chunk_title: data.related_chunk_title,
+    content_type: data.content_type,
+    decision_status: data.decision_status,
+    impact_level: data.impact_level,
+    confidence: data.confidence,
+    event_key: data.event_key,
     category_id: data.category_id,
     status: data.status,
     is_featured: data.is_featured,

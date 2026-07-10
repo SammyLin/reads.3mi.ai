@@ -38,6 +38,7 @@ npx wrangler d1 execute news-3mi-db --remote --file=migrations/0001_init.sql
 # 2. 設定 secrets
 npx wrangler pages secret put ADMIN_PASSWORD --project-name=news-3mi
 npx wrangler pages secret put JWT_SECRET --project-name=news-3mi
+npx wrangler pages secret put OPENCLAW_INGEST_KEY --project-name=news-3mi
 
 # 3. 建立 R2 bucket
 npx wrangler r2 bucket create news-3mi-images
@@ -96,6 +97,10 @@ news-3mi/
 | POST | `/api/auth` | 登入（password） |
 | DELETE | `/api/auth` | 登出 |
 | POST | `/api/upload` | 上傳圖片到 R2（需登入） |
+| GET | `/api/ingest` | 公開機器 feed，供 ChunkUp/OpenClaw 讀文章 |
+| POST | `/api/ingest` | OpenClaw Bearer key 冪等新增／更新文章 |
+
+OpenClaw POST 以 `source_url` 優先去重，支援 `related_chunk_url`、`related_chunk_title` 建立 ChunkUp 雙向連結。先套用 `migrations/0003_add_content_links.sql`。
 
 ## 後台
 

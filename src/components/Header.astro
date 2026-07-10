@@ -1,16 +1,10 @@
 ---
 const pathname = Astro.url.pathname;
 const nav = [
-  { href: '/', label: '首頁' },
-  { href: '/category/ai', label: 'AI' },
-  { href: '/archive', label: '前沿' },
-  { href: '/tags', label: '專題' },
-  { href: '/category/architecture', label: '架構' },
-  { href: '/category/tutorial', label: '實戰' },
-  { href: '/category/security', label: '安全' },
-  { href: '/category/life', label: '生活' },
-  { href: '/category/tools', label: '工具' },
-  { href: '/archive', label: '存檔' },
+  { href: '/', label: 'Signals' },
+  { href: '/category/architecture', label: 'Architecture' },
+  { href: '/category/tools', label: 'Tools' },
+  { href: '/archive', label: 'Archive' },
   { href: '/about', label: '關於' },
 ];
 ---
@@ -18,9 +12,9 @@ const nav = [
 <header class="site-header">
   <div class="container">
     <a href="/" class="site-logo">
-      <span class="logo-mark">&gt; 3mi _</span>
-      <span class="logo-title">port:3MI AI Signal</span>
-      <span class="tag">AI 重度工程筆記</span>
+      <span class="logo-title">3mi<span>.ai</span></span>
+      <span class="logo-divider"></span>
+      <span class="logo-section">News</span>
     </a>
     <nav class="site-nav">
       {nav.map((item) => (
