@@ -18,20 +18,7 @@ import { ClipboardList } from 'lucide-astro';
 
   <div id="admin-content" style="display: none;">
     <div class="card admin-table-card">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>標題</th>
-            <th>分類</th>
-            <th>狀態</th>
-            <th>更新</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="articles-tbody">
-          <tr><td colspan="5" class="admin-table-empty">載入中...</td></tr>
-        </tbody>
-      </table>
+      <div id="articles-table"></div>
     </div>
   </div>
 
@@ -51,7 +38,7 @@ import { ClipboardList } from 'lucide-astro';
       font-weight: 700;
       letter-spacing: -.02em;
     }
-    .admin-page-head h1 svg { color: var(--accent); }
+    .admin-page-head h1 :global(svg) { color: var(--accent); }
 
     .admin-placeholder {
       padding: 48px;
@@ -65,41 +52,140 @@ import { ClipboardList } from 'lucide-astro';
       overflow: hidden;
     }
     .admin-table-card:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
+  </style>
 
-    .admin-table {
-      width: 100%;
-      border-collapse: collapse;
+  <style is:global>
+    /* Tabulator — 對齊站內 design tokens */
+    .tabulator {
+      background: transparent;
+      border: none;
       font-size: 14px;
+      font-family: inherit;
     }
-    .admin-table thead th {
-      text-align: left;
-      padding: 14px 20px;
+    .tabulator .tabulator-header {
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+    }
+    .tabulator .tabulator-header .tabulator-col {
+      background: transparent;
+      border-right: none;
+    }
+    .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+      padding: 12px 20px 8px;
+    }
+    .tabulator .tabulator-header .tabulator-col .tabulator-col-title {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: .08em;
       text-transform: uppercase;
       color: var(--text-muted);
-      background: var(--bg-tertiary);
+    }
+    .tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover {
+      background: var(--bg-secondary);
+    }
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter {
+      padding: 0 20px 10px;
+    }
+    .tabulator .tabulator-header-filter input,
+    .tabulator .tabulator-header-filter .tabulator-input {
+      width: 100%;
+      padding: 4px 8px !important;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-sm, 6px);
+      outline: none;
+    }
+    .tabulator .tabulator-header-filter input:focus {
+      border-color: var(--accent) !important;
+    }
+    .tabulator .tabulator-tableholder .tabulator-table {
+      background: transparent;
+      color: var(--text-primary);
+    }
+    .tabulator-row {
+      background: transparent;
       border-bottom: 1px solid var(--border);
+      transition: background var(--dur-fast) var(--ease);
     }
-    .admin-table tbody td {
+    .tabulator-row:last-child { border-bottom: none; }
+    .tabulator-row.tabulator-row-even { background: transparent; }
+    .tabulator-row:hover,
+    .tabulator-row.tabulator-row-even:hover { background: var(--bg-tertiary); }
+    .tabulator-row .tabulator-cell {
       padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      vertical-align: middle;
+      border-right: none;
+      display: inline-flex;
+      align-items: center;
     }
-    .admin-table tbody tr:first-child td { border-top: none; }
-    .admin-table tbody tr { transition: background var(--dur-fast) var(--ease); }
-    .admin-table tbody tr:hover { background: var(--bg-tertiary); }
-    .admin-table-empty {
-      padding: 48px !important;
-      text-align: center;
+    .tabulator .tabulator-tableholder .tabulator-placeholder .tabulator-placeholder-contents {
+      padding: 48px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: normal;
+    }
+    .tabulator .tabulator-footer {
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border);
+      padding: 8px 20px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .tabulator .tabulator-footer .tabulator-footer-contents {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .tabulator .tabulator-footer .tabulator-page-counter {
+      font-size: 13px;
       color: var(--text-muted);
     }
-    .admin-title { font-weight: 600; color: var(--text-primary); }
-    .admin-table td:nth-child(2),
-    .admin-table td:nth-child(3),
-    .admin-table td:nth-child(4),
-    .admin-table td:nth-child(5) { white-space: nowrap; width: 1%; }
+    .tabulator .tabulator-footer .tabulator-page,
+    .tabulator .tabulator-footer .tabulator-page-size {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm, 6px);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-family: inherit;
+      padding: 3px 9px;
+    }
+    .tabulator .tabulator-footer .tabulator-page:not(.disabled):hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+    .tabulator .tabulator-footer .tabulator-page.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-hover);
+      font-weight: 600;
+    }
+
+    /* 列表用 edit-list（header filter 下拉） */
+    .tabulator-edit-list {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm, 6px);
+      box-shadow: var(--shadow-md);
+      font-size: 13px;
+    }
+    .tabulator-edit-list .tabulator-edit-list-item {
+      color: var(--text-primary);
+      padding: 6px 10px;
+    }
+    .tabulator-edit-list .tabulator-edit-list-item.active,
+    .tabulator-edit-list .tabulator-edit-list-item:hover {
+      background: var(--accent-soft);
+      color: var(--accent-hover);
+    }
+
+    /* 表格內容元件（Tabulator 動態 DOM，需 global） */
+    .admin-title { font-weight: 600; color: var(--text-primary); white-space: normal; line-height: 1.45; }
+    .admin-featured-star { margin-left: 6px; display: inline-flex; vertical-align: middle; }
     .admin-status {
       display: inline-flex;
       align-items: center;
@@ -125,8 +211,17 @@ import { ClipboardList } from 'lucide-astro';
   </style>
 
   <script>
+    import { TabulatorFull as Tabulator } from 'tabulator-tables';
+    import 'tabulator-tables/dist/css/tabulator_simple.min.css';
+
+    const STAR_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>';
+
+    function escapeHtml(s: unknown) {
+      if (typeof s !== 'string') return '';
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     async function init() {
-      // Check auth
       const authRes = await fetch('/api/auth');
       const { authenticated } = authRes.ok ? await authRes.json() : { authenticated: false };
       if (!authenticated) {
@@ -134,10 +229,9 @@ import { ClipboardList } from 'lucide-astro';
         return;
       }
 
-      document.getElementById('auth-check').style.display = 'none';
-      document.getElementById('admin-content').style.display = 'block';
+      document.getElementById('auth-check')!.style.display = 'none';
+      document.getElementById('admin-content')!.style.display = 'block';
 
-      // Load articles
       const res = await fetch('/api/articles?scope=admin');
       if (res.status === 401) {
         window.location.href = '/admin/login';
@@ -145,58 +239,89 @@ import { ClipboardList } from 'lucide-astro';
       }
       const { articles = [] } = await res.json();
 
-      const tbody = document.getElementById('articles-tbody');
-      if (!tbody) return;
+      const categoryNames = [...new Set(articles.map((a: any) => a.category?.name).filter(Boolean))].sort() as string[];
 
-      if (articles.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">還沒有文章。<a href="/admin/new">寫第一篇 →</a></td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = articles.map((a) => `
-        <tr>
-          <td>
-            <div class="admin-title">${escapeHtml(a.title)}</div>
-          </td>
-          <td>
-            ${a.category ? `<span class="tag" style="background: ${a.category.color}22; color: ${a.category.color}; border-color: ${a.category.color}33;">${escapeHtml(a.category.name)}</span>` : ''}
-          </td>
-          <td>
-            <span class="admin-status ${a.status === 'published' ? 'is-published' : 'is-draft'}">
-              ${a.status === 'published' ? '已發佈' : '草稿'}
-            </span>
-            ${a.is_featured ? '<span style="margin-left: 6px; display: inline-flex; vertical-align: middle;" title="焦點文章"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg></span>' : ''}
-          </td>
-          <td>
-            <span class="admin-date">${(a.updated_at || '').slice(0, 10)}</span>
-          </td>
-          <td>
-            <span class="admin-actions">
-              <a href="/admin/edit/${a.id}" class="btn">編輯</a>
-              ${a.status === 'published'
-                ? `<a href="/post/${escapeHtml(a.slug)}" target="_blank" class="btn">檢視</a>`
-                : `<a href="/admin/preview/${a.id}" target="_blank" class="btn">預覽</a>`}
-              <button data-id="${a.id}" data-title="${escapeHtml(a.title)}" class="btn btn-danger" onclick="deleteArticle(this.dataset.id, this.dataset.title)">刪除</button>
-            </span>
-          </td>
-        </tr>
-      `).join('');
+      new Tabulator('#articles-table', {
+        data: articles,
+        layout: 'fitColumns',
+        pagination: true,
+        paginationSize: 25,
+        paginationSizeSelector: [25, 50, 100],
+        paginationCounter: (_pageSize: number, _currentRow: number, _currentPage: number, totalRows: number) => `共 ${totalRows} 篇`,
+        placeholder: '沒有符合條件的文章',
+        initialSort: [{ column: 'updated_at', dir: 'desc' }],
+        columns: [
+          {
+            title: '標題',
+            field: 'title',
+            widthGrow: 3,
+            minWidth: 220,
+            headerFilter: 'input',
+            headerFilterPlaceholder: '搜尋標題...',
+            formatter: (cell: any) => {
+              const a = cell.getRow().getData();
+              const star = a.is_featured ? `<span class="admin-featured-star" title="焦點文章">${STAR_SVG}</span>` : '';
+              return `<span class="admin-title">${escapeHtml(a.title)}</span>${star}`;
+            },
+          },
+          {
+            title: '分類',
+            field: 'category.name',
+            width: 140,
+            headerFilter: 'list',
+            headerFilterParams: { values: categoryNames, clearable: true },
+            headerFilterPlaceholder: '全部',
+            formatter: (cell: any) => {
+              const c = cell.getRow().getData().category;
+              if (!c) return '';
+              return `<span class="tag" style="background: ${c.color}22; color: ${c.color}; border-color: ${c.color}33;">${escapeHtml(c.name)}</span>`;
+            },
+          },
+          {
+            title: '狀態',
+            field: 'status',
+            width: 120,
+            headerFilter: 'list',
+            headerFilterParams: { values: { published: '已發佈', draft: '草稿' }, clearable: true },
+            headerFilterPlaceholder: '全部',
+            formatter: (cell: any) => {
+              const published = cell.getValue() === 'published';
+              return `<span class="admin-status ${published ? 'is-published' : 'is-draft'}">${published ? '已發佈' : '草稿'}</span>`;
+            },
+          },
+          {
+            title: '更新',
+            field: 'updated_at',
+            width: 110,
+            formatter: (cell: any) => `<span class="admin-date">${(cell.getValue() || '').slice(0, 10)}</span>`,
+          },
+          {
+            title: '操作',
+            field: 'id',
+            width: 200,
+            headerSort: false,
+            formatter: (cell: any) => {
+              const a = cell.getRow().getData();
+              const view = a.status === 'published'
+                ? `<a href="/post/${encodeURIComponent(a.slug)}" target="_blank" class="btn">檢視</a>`
+                : `<a href="/admin/preview/${a.id}" target="_blank" class="btn">預覽</a>`;
+              return `<span class="admin-actions"><a href="/admin/edit/${a.id}" class="btn">編輯</a>${view}<button type="button" class="btn btn-danger" data-action="delete">刪除</button></span>`;
+            },
+            cellClick: async (e: Event, cell: any) => {
+              if (!(e.target as HTMLElement).closest('[data-action="delete"]')) return;
+              const a = cell.getRow().getData();
+              if (!confirm(`確定要刪除「${a.title}」嗎？此操作無法復原。`)) return;
+              const delRes = await fetch(`/api/articles?id=${a.id}`, { method: 'DELETE' });
+              if (delRes.ok) {
+                cell.getRow().delete();
+              } else {
+                alert('刪除失敗');
+              }
+            },
+          },
+        ],
+      });
     }
-
-    function escapeHtml(s) {
-      if (typeof s !== 'string') return '';
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    window.deleteArticle = async (id, title) => {
-      if (!confirm(`確定要刪除「${title}」嗎？此操作無法復原。`)) return;
-      const res = await fetch(`/api/articles?id=${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        window.location.reload();
-      } else {
-        alert('刪除失敗');
-      }
-    };
 
     init();
   </script>
