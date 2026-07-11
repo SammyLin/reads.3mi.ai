@@ -17,6 +17,7 @@ export interface Article {
   related_chunk_url: string | null;
   related_chunk_title: string | null;
   content_type: 'signal' | 'deep-dive' | 'field-note' | 'decision-card';
+  authorship: 'original' | 'ai' | 'translation';
   decision_status: 'adopt' | 'trial' | 'watch' | 'avoid';
   impact_level: 'low' | 'medium' | 'high';
   confidence: number;
@@ -57,7 +58,7 @@ export interface ArticleWithMeta extends Article {
 /** 取得發佈文章列表（依發布時間倒序） */
 export async function listPublishedArticles(
   db: D1Database,
-  opts: { categorySlug?: string; tagSlug?: string; limit?: number; offset?: number; orderBy?: 'date' | 'views' } = {}
+  opts: { categorySlug?: string; tagSlug?: string; authorship?: string; excludeSlug?: string; limit?: number; offset?: number; orderBy?: 'date' | 'views' } = {}
 ): Promise<ArticleWithMeta[]> {
   const limit = opts.limit ?? 20;
   const offset = opts.offset ?? 0;
@@ -78,6 +79,14 @@ export async function listPublishedArticles(
   if (opts.tagSlug) {
     sql += ` AND a.id IN (SELECT at.article_id FROM article_tags at JOIN tags t ON at.tag_id = t.id WHERE t.slug = ?)`;
     params.push(opts.tagSlug);
+  }
+  if (opts.authorship) {
+    sql += ` AND a.authorship = ?`;
+    params.push(opts.authorship);
+  }
+  if (opts.excludeSlug) {
+    sql += ` AND a.slug != ?`;
+    params.push(opts.excludeSlug);
   }
 
   sql += opts.orderBy === 'views'
@@ -103,6 +112,7 @@ export async function listPublishedArticles(
     related_chunk_url: r.related_chunk_url,
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
+    authorship: r.authorship,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -131,7 +141,7 @@ export async function listPublishedArticles(
 /** 計算發佈文章數 */
 export async function countPublishedArticles(
   db: D1Database,
-  opts: { categorySlug?: string; tagSlug?: string; withSource?: boolean } = {}
+  opts: { categorySlug?: string; tagSlug?: string; authorship?: string; withSource?: boolean } = {}
 ): Promise<number> {
   let sql = `
     SELECT COUNT(*) as count
@@ -148,6 +158,10 @@ export async function countPublishedArticles(
   if (opts.tagSlug) {
     sql += ` AND a.id IN (SELECT at.article_id FROM article_tags at JOIN tags t ON at.tag_id = t.id WHERE t.slug = ?)`;
     params.push(opts.tagSlug);
+  }
+  if (opts.authorship) {
+    sql += ` AND a.authorship = ?`;
+    params.push(opts.authorship);
   }
   if (opts.withSource) {
     sql += ` AND a.source_url IS NOT NULL AND a.source_url != ''`;
@@ -187,6 +201,7 @@ export async function getFeaturedArticle(db: D1Database): Promise<ArticleWithMet
     related_chunk_url: r.related_chunk_url,
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
+    authorship: r.authorship,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -241,6 +256,7 @@ export async function getArticleBySlug(db: D1Database, slug: string): Promise<Ar
     related_chunk_url: r.related_chunk_url,
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
+    authorship: r.authorship,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -414,6 +430,7 @@ export async function listAllArticles(db: D1Database): Promise<ArticleWithMeta[]
     related_chunk_url: r.related_chunk_url,
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
+    authorship: r.authorship,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -454,6 +471,7 @@ export async function createArticle(
     related_chunk_url?: string;
     related_chunk_title?: string;
     content_type?: Article['content_type'];
+    authorship?: Article['authorship'];
     decision_status?: Article['decision_status'];
     impact_level?: Article['impact_level'];
     confidence?: number;
@@ -469,8 +487,8 @@ export async function createArticle(
 ): Promise<number> {
   const now = new Date().toISOString();
   const result = await db.prepare(`
-    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, related_chunk_url, related_chunk_title, content_type, decision_status, impact_level, confidence, event_key, category_id, status, is_featured, reading_time, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, related_chunk_url, related_chunk_title, content_type, authorship, decision_status, impact_level, confidence, event_key, category_id, status, is_featured, reading_time, published_at, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     data.slug,
     data.title,
@@ -483,6 +501,7 @@ export async function createArticle(
     data.related_chunk_url || null,
     data.related_chunk_title || null,
     data.content_type || 'signal',
+    data.authorship || 'ai',
     data.decision_status || 'watch',
     data.impact_level || 'medium',
     Math.min(100, Math.max(0, data.confidence ?? 70)),
@@ -526,6 +545,7 @@ export async function updateArticle(
     related_chunk_url?: string;
     related_chunk_title?: string;
     content_type?: Article['content_type'];
+    authorship?: Article['authorship'];
     decision_status?: Article['decision_status'];
     impact_level?: Article['impact_level'];
     confidence?: number;
@@ -554,6 +574,7 @@ export async function updateArticle(
     related_chunk_url: data.related_chunk_url,
     related_chunk_title: data.related_chunk_title,
     content_type: data.content_type,
+    authorship: data.authorship,
     decision_status: data.decision_status,
     impact_level: data.impact_level,
     confidence: data.confidence,

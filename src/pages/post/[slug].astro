@@ -42,6 +42,68 @@ const ogImage = new URL(rawCover, Astro.url.origin).toString();
 </BaseLayout>
 
 <script>
+// lucide inline SVG（runtime 組字串，UI 不用 emoji）
+const LUCIDE_ICONS = {
+  'pen-line': '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+  sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
+  languages: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+};
+
+function lucide(name) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${LUCIDE_ICONS[name] || ''}</svg>`;
+}
+
+const AUTHORSHIP = {
+  original: { label: '觀點', icon: 'pen-line' },
+  ai: { label: 'AI 精選', icon: 'sparkles' },
+  translation: { label: '譯文', icon: 'languages' },
+};
+
+// 推薦文章：同分類優先，不足補最新，排除當前文章
+async function loadRelated(article) {
+  const section = document.getElementById('related-posts');
+  const grid = document.getElementById('related-grid');
+  if (!section || !grid) return;
+
+  try {
+    const exclude = `exclude=${encodeURIComponent(article.slug)}&limit=4`;
+    let related = [];
+    if (article.category?.slug) {
+      const res = await fetch(`/api/articles?category=${encodeURIComponent(article.category.slug)}&${exclude}`);
+      const data = await res.json();
+      related = data.articles || [];
+    }
+    if (related.length < 4) {
+      const res = await fetch(`/api/articles?${exclude}`);
+      const data = await res.json();
+      const seen = new Set(related.map((a) => a.slug));
+      for (const a of data.articles || []) {
+        if (related.length >= 4) break;
+        if (!seen.has(a.slug)) { related.push(a); seen.add(a.slug); }
+      }
+    }
+    if (related.length === 0) return;
+
+    grid.innerHTML = related.map((a) => {
+      const auth = AUTHORSHIP[a.authorship] || AUTHORSHIP.ai;
+      const date = a.published_at ? new Date(a.published_at).toISOString().slice(0, 10) : '';
+      return `
+        <a href="/post/${encodeURIComponent(a.slug)}" class="related-card">
+          <div class="related-meta">
+            <span class="authorship-badge authorship-${a.authorship || 'ai'}">${lucide(auth.icon)}${auth.label}</span>
+            ${a.category ? `<span style="color: ${escapeAttr(a.category.color)}; font-weight: 600;">${escapeHtml(a.category.name)}</span>` : ''}
+            <span>${date}</span>
+          </div>
+          <h3>${escapeHtml(a.title)}</h3>
+          ${a.excerpt ? `<p>${escapeHtml(a.excerpt)}</p>` : ''}
+        </a>`;
+    }).join('');
+    section.hidden = false;
+  } catch (err) {
+    console.error('Failed to load related articles:', err);
+  }
+}
+
 async function loadArticle() {
   const slug = window.__ARTICLE_SLUG__;
   const container = document.getElementById('article-container');
@@ -69,12 +131,24 @@ async function loadArticle() {
     } catch (_) { /* ignore */ }
     const dateStr = article.published_at ? new Date(article.published_at).toISOString().slice(0, 10) : '';
     const sourceLabel = article.source_type ? escapeHtml(article.source_type) : '本站筆記';
+    const authorship = AUTHORSHIP[article.authorship] || AUTHORSHIP.ai;
+
+    // 譯文：文首標明原文出處；AI / 譯文：文末揭露一行
+    const translationNote = article.authorship === 'translation' && isHttpUrl(article.source_url)
+      ? `<div class="authorship-note">${lucide(authorship.icon)}<span>本文翻譯自 <a href="${escapeAttr(article.source_url)}" target="_blank" rel="noopener">${sourceLabel}</a> 的原文，著作權屬原作者；譯文僅供參考，請以原文為準。</span></div>`
+      : '';
+    const disclosure = article.authorship === 'ai'
+      ? `<div class="authorship-disclosure">${lucide(AUTHORSHIP.ai.icon)}<span>本文由 AI 整理撰寫，經站長挑選與確認後發佈。</span></div>`
+      : article.authorship === 'translation'
+        ? `<div class="authorship-disclosure">${lucide(AUTHORSHIP.translation.icon)}<span>本文為原文翻譯，非本站原創觀點。</span></div>`
+        : '';
 
     container.innerHTML = `
       <div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div>
       <article class="prose article-shell">
         <header class="article-header">
           <div class="article-kicker">
+            <span class="authorship-badge authorship-${article.authorship || 'ai'}">${lucide(authorship.icon)}${authorship.label}</span>
             <span class="decision-badge decision-${article.decision_status || 'watch'}">${({adopt:'Adopt',trial:'Trial',watch:'Watch',avoid:'Avoid'})[article.decision_status] || 'Watch'}</span>
             <span class="text-muted">${article.content_type || 'signal'}</span>
             <span class="text-muted">Impact ${article.impact_level || 'medium'}</span>
@@ -95,7 +169,11 @@ async function loadArticle() {
 
         ${article.cover_image ? `<img src="${escapeHtml(article.cover_image)}" alt="${escapeHtml(article.title)}" style="margin-bottom: 32px; border-radius: var(--radius-lg); max-width: 100%;" />` : ''}
 
+        ${translationNote}
+
         <div class="markdown-content">${article.content_html || '<p>內容待補。</p>'}</div>
+
+        ${disclosure}
 
         ${(article.tags && article.tags.length > 0) ? `
           <footer style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);">
@@ -105,6 +183,11 @@ async function loadArticle() {
             </div>
           </footer>` : ''}
 
+        <section class="related-posts" id="related-posts" hidden>
+          <h2>推薦文章</h2>
+          <div class="related-grid" id="related-grid"></div>
+        </section>
+
         <aside class="article-subscribe">
           <div>
             <strong>追蹤後續整理</strong>
@@ -113,6 +196,8 @@ async function loadArticle() {
           <a href="/rss.xml">RSS Feed</a>
         </aside>
       </article>`;
+
+    loadRelated(article);
 
     const progressBar = document.getElementById('reading-progress-bar');
     if (progressBar) {

@@ -4,17 +4,26 @@ import type { APIContext } from 'astro';
 
 export const prerender = false;
 
+const AUTHORSHIP_LABEL: Record<string, string> = {
+  original: '觀點',
+  ai: 'AI 精選',
+  translation: '譯文',
+};
+
 export async function GET(context: APIContext) {
+  const authorshipParam = new URL(context.request.url).searchParams.get('authorship');
+  const authorship = authorshipParam && authorshipParam in AUTHORSHIP_LABEL ? authorshipParam : undefined;
+
   let articles: any[] = [];
   try {
     const db = getDB(context);
-    articles = await listPublishedArticles(db, { limit: 50 });
+    articles = await listPublishedArticles(db, { limit: 50, authorship });
   } catch (e: any) {
     console.error('RSS fetch failed:', e.message);
   }
 
   return rss({
-    title: 'news.3mi.ai',
+    title: authorship ? `news.3mi.ai — ${AUTHORSHIP_LABEL[authorship]}` : 'news.3mi.ai',
     description: 'Sammy 的 AI 工程筆記',
     site: context.site || 'https://news.3mi.ai',
     items: articles.map((article) => ({

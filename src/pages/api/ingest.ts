@@ -26,7 +26,7 @@ function slugify(input: string) {
 export const GET: APIRoute = async (context) => {
   const db = getDB(context);
   const result = await db.prepare(`
-    SELECT slug,title,excerpt,source_url,source_type,related_chunk_url,related_chunk_title,published_at,updated_at
+    SELECT slug,title,excerpt,source_url,source_type,authorship,related_chunk_url,related_chunk_title,published_at,updated_at
     FROM articles WHERE status='published' ORDER BY published_at DESC LIMIT 100
   `).all();
   return json({ version: 1, site: 'news', generated_at: new Date().toISOString(), items: result.results || [] });
@@ -77,6 +77,7 @@ export const POST: APIRoute = async (context) => {
       : undefined,
     related_chunk_title: body.related_chunk_title ? String(body.related_chunk_title) : undefined,
     content_type: ['signal','deep-dive','field-note','decision-card'].includes(body.content_type) ? body.content_type : 'signal',
+    authorship: ['original','ai','translation'].includes(body.authorship) ? body.authorship : 'ai',
     decision_status: ['adopt','trial','watch','avoid'].includes(body.decision_status) ? body.decision_status : 'watch',
     impact_level: ['low','medium','high'].includes(body.impact_level) ? body.impact_level : 'medium',
     confidence: Math.min(100, Math.max(0, Number(body.confidence ?? 70))),

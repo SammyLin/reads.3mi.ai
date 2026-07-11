@@ -2005,3 +2005,84 @@ a {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
 }
+
+/* ===== Authorship（作者身分：觀點 / AI 精選 / 譯文） ===== */
+.authorship-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  min-height: 22px; padding: 2px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em; white-space: nowrap;
+}
+.authorship-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+.authorship-original { color: #5b21b6; background: #ede9fe; }
+.authorship-ai { color: #334155; background: #e2e8f0; }
+.authorship-translation { color: #0f766e; background: #ccfbf1; }
+
+.authorship-tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.authorship-tabs button {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-secondary);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.authorship-tabs button svg { width: 14px; height: 14px; }
+.authorship-tabs button:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.authorship-tabs button.active { background: var(--text-primary); color: var(--bg-primary); border-color: var(--text-primary); }
+
+/* 文章頁：譯文出處 / AI 揭露 */
+.authorship-note {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 0 0 28px; padding: 14px 18px;
+  border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  font-size: 14px; line-height: 1.7;
+}
+.authorship-note svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 3px; color: var(--accent); }
+.authorship-note a { font-weight: 600; }
+.authorship-disclosure {
+  margin-top: 32px; padding-top: 16px; border-top: 1px dashed var(--border);
+  color: var(--text-muted); font-size: 13px; line-height: 1.7;
+  display: flex; align-items: center; gap: 8px;
+}
+.authorship-disclosure svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ===== 文章內文標題層級（80aj 風格：h1/h2/h3 一眼分清） ===== */
+.markdown-content h1 {
+  font-size: 28px; font-weight: 800; letter-spacing: -.03em;
+  margin: 56px 0 18px; padding-bottom: 12px;
+  border-bottom: 2px solid var(--text-primary);
+}
+.markdown-content h2 {
+  font-size: 23px; font-weight: 700; letter-spacing: -.02em;
+  margin: 48px 0 16px; padding: 2px 0 2px 14px;
+  border-left: 4px solid var(--accent); border-bottom: 0;
+}
+.markdown-content h3 {
+  font-size: 18px; font-weight: 700;
+  margin: 34px 0 12px; padding: 0; border: 0;
+}
+.markdown-content h3::before { content: '#'; color: var(--accent); font-weight: 800; margin-right: 8px; }
+.markdown-content h4 {
+  font-size: 15px; font-weight: 700; color: var(--text-secondary);
+  letter-spacing: .02em; margin: 28px 0 10px;
+}
+
+/* ===== 推薦文章（文章頁尾） ===== */
+.related-posts { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border); }
+.related-posts > h2 {
+  font-size: 12px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+}
+.related-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.related-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-secondary); color: var(--text-primary); border-bottom-width: 1px;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.related-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-muted); }
+.related-card .related-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+.related-card h3 { font-size: 15.5px; font-weight: 700; line-height: 1.45; letter-spacing: -.01em; }
+.related-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 640px) { .related-grid { grid-template-columns: 1fr; } }
