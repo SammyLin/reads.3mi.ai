@@ -6,7 +6,10 @@ import { ClipboardList } from 'lucide-astro';
 <AdminLayout>
   <header class="admin-page-head">
     <h1><ClipboardList size={22} /> 文章管理</h1>
-    <a href="/admin/new" class="btn btn-primary">新增文章</a>
+    <div style="display: flex; gap: 8px;">
+      <a href="/admin/subscribers" class="btn">訂閱名單</a>
+      <a href="/admin/new" class="btn btn-primary">新增文章</a>
+    </div>
   </header>
 
   <div id="auth-check" class="card admin-placeholder">

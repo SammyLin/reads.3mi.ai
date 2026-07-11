@@ -51,7 +51,7 @@ export const GET: APIRoute = async (context) => {
   }
 
   const db = getDB(context);
-  const result = await db.prepare(`SELECT email, status, source, created_at FROM subscribers ORDER BY created_at DESC`).all();
+  const result = await db.prepare(`SELECT id, email, status, source, created_at FROM subscribers ORDER BY created_at DESC`).all();
   const rows = (result.results || []) as any[];
 
   const url = new URL(context.request.url);
@@ -67,4 +67,18 @@ export const GET: APIRoute = async (context) => {
     });
   }
   return json({ total: rows.length, subscribers: rows });
+};
+
+/** 刪除訂閱者（admin 限定） */
+export const DELETE: APIRoute = async (context) => {
+  const env = getEnv(context);
+  if (!(await isAuthenticated(context.request, env.JWT_SECRET))) {
+    return json({ error: 'Unauthorized' }, 401);
+  }
+  const id = parseInt(new URL(context.request.url).searchParams.get('id') || '0');
+  if (!id) return json({ error: 'Missing id' }, 400);
+
+  const db = getDB(context);
+  await db.prepare(`DELETE FROM subscribers WHERE id = ?`).bind(id).run();
+  return json({ success: true });
 };
