@@ -173,7 +173,9 @@ import { ClipboardList } from 'lucide-astro';
           <td>
             <span class="admin-actions">
               <a href="/admin/edit/${a.id}" class="btn">編輯</a>
-              <a href="/post/${escapeHtml(a.slug)}" target="_blank" class="btn">檢視</a>
+              ${a.status === 'published'
+                ? `<a href="/post/${escapeHtml(a.slug)}" target="_blank" class="btn">檢視</a>`
+                : `<a href="/admin/preview/${a.id}" target="_blank" class="btn">預覽</a>`}
               <button data-id="${a.id}" data-title="${escapeHtml(a.title)}" class="btn btn-danger" onclick="deleteArticle(this.dataset.id, this.dataset.title)">刪除</button>
             </span>
           </td>

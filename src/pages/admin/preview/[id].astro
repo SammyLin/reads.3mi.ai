@@ -1,0 +1,134 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getArticleBySlug, getDB } from '../../../lib/db';
+import { isAuthenticated } from '../../../lib/auth';
+import { renderMarkdown } from '../../../lib/markdown';
+import { Eye, PenLine, Sparkles, Languages } from 'lucide-astro';
+
+const isAuthed = await isAuthenticated(Astro.request, (Astro.locals as any)?.runtime?.env?.JWT_SECRET);
+if (!isAuthed) return Astro.redirect('/admin/login');
+
+const { id } = Astro.params;
+
+let article: any = null;
+try {
+  const db = getDB(Astro);
+  if (id && /^\d+$/.test(id)) {
+    const r = await db.prepare(`SELECT slug FROM articles WHERE id = ?`).bind(parseInt(id)).first();
+    if (r) article = await getArticleBySlug(db, r.slug as string);
+  }
+} catch (e) {
+  console.error(e);
+}
+
+if (!article) return Astro.redirect('/admin');
+
+const AUTHORSHIP: Record<string, { label: string; Icon: any }> = {
+  original: { label: '觀點', Icon: PenLine },
+  ai: { label: 'AI 精選', Icon: Sparkles },
+  translation: { label: '譯文', Icon: Languages },
+};
+const authorship = AUTHORSHIP[article.authorship] || AUTHORSHIP.ai;
+const AuthorshipIcon = authorship.Icon;
+
+const DECISION_LABELS: Record<string, string> = { adopt: 'Adopt', trial: 'Trial', watch: 'Watch', avoid: 'Avoid' };
+const decisionLabel = DECISION_LABELS[article.decision_status] || 'Watch';
+
+const contentHtml = article.content_html
+  || (article.content_md ? renderMarkdown(article.content_md) : '<p>內容待補。</p>');
+
+const dateStr = (article.published_at || article.updated_at || '').slice(0, 10);
+const sourceLabel = article.source_type || '本站筆記';
+const isHttpUrl = (s: unknown) => typeof s === 'string' && /^https?:\/\//i.test(s.trim());
+---
+
+<BaseLayout title={`預覽：${article.title}`} showSidebars={false}>
+  <div class="preview-banner">
+    <Eye size={16} />
+    <span>草稿預覽 — 僅 admin 可見，狀態：<strong>{article.status === 'published' ? '已發佈' : '草稿'}</strong></span>
+    <span class="preview-banner-actions">
+      <a href={`/admin/edit/${article.id}`} class="btn">編輯</a>
+      <a href="/admin" class="btn">返回列表</a>
+    </span>
+  </div>
+
+  <article class="prose article-shell">
+    <header class="article-header">
+      <div class="article-kicker">
+        <span class={`authorship-badge authorship-${article.authorship || 'ai'}`}><AuthorshipIcon size={13} />{authorship.label}</span>
+        <span class={`decision-badge decision-${article.decision_status || 'watch'}`}>{decisionLabel}</span>
+        <span class="text-muted">{article.content_type || 'signal'}</span>
+        <span class="text-muted">Impact {article.impact_level || 'medium'}</span>
+        <span class="text-muted">Confidence {article.confidence ?? 70}%</span>
+        {article.category && (
+          <a href={`/category/${article.category.slug}`} class="tag" style={`background: ${article.category.color}22; color: ${article.category.color}; border-bottom: none;`}>{article.category.name}</a>
+        )}
+        <time class="text-muted">{dateStr}</time>
+        <span class="text-muted">{article.reading_time} 分鐘閱讀</span>
+        <span class="text-muted">{sourceLabel}</span>
+      </div>
+      <h1>{article.title}</h1>
+      {article.excerpt && <p style="font-size: 16px; color: var(--text-secondary); margin-top: 12px;">{article.excerpt}</p>}
+      <div class="article-actions">
+        {isHttpUrl(article.source_url) && (
+          <a class="source-card" href={article.source_url} target="_blank" rel="noopener"><span>原文來源</span><strong>{sourceLabel}</strong></a>
+        )}
+        {isHttpUrl(article.related_chunk_url) && (
+          <a class="source-card" href={article.related_chunk_url} target="_blank" rel="noopener"><span>延伸練習 · ChunkUp</span><strong>{article.related_chunk_title || '練習相關英文語塊'}</strong></a>
+        )}
+      </div>
+    </header>
+
+    {article.cover_image && (
+      <img src={article.cover_image} alt={article.title} style="margin-bottom: 32px; border-radius: var(--radius-lg); max-width: 100%;" />
+    )}
+
+    {article.authorship === 'translation' && isHttpUrl(article.source_url) && (
+      <div class="authorship-note"><Languages size={14} /><span>本文翻譯自 <a href={article.source_url} target="_blank" rel="noopener">{sourceLabel}</a> 的原文，著作權屬原作者；譯文僅供參考，請以原文為準。</span></div>
+    )}
+
+    <div class="markdown-content" set:html={contentHtml} />
+
+    {article.authorship === 'ai' && (
+      <div class="authorship-disclosure"><Sparkles size={14} /><span>本文由 AI 整理撰寫，經站長挑選與確認後發佈。</span></div>
+    )}
+    {article.authorship === 'translation' && (
+      <div class="authorship-disclosure"><Languages size={14} /><span>本文為原文翻譯，非本站原創觀點。</span></div>
+    )}
+
+    {article.tags && article.tags.length > 0 && (
+      <footer style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <span class="text-muted" style="font-size: 13px; font-weight: 600;">標籤</span>
+          {article.tags.map((tag: any) => (
+            <a href={`/tag/${tag.slug}`} class="tag" style="border-bottom: none;">#{tag.name}</a>
+          ))}
+        </div>
+      </footer>
+    )}
+  </article>
+
+  <style>
+    .preview-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      margin-bottom: 24px;
+      border: 1px dashed var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+      color: var(--accent-hover);
+      font-size: 13px;
+    }
+    .preview-banner svg { flex-shrink: 0; }
+    .preview-banner-actions {
+      margin-left: auto;
+      display: inline-flex;
+      gap: 6px;
+    }
+    .preview-banner-actions .btn { font-size: 12px; padding: 4px 10px; }
+  </style>
+</BaseLayout>

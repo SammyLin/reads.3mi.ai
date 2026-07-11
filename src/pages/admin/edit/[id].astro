@@ -38,7 +38,10 @@ if (!article) {
 <AdminLayout>
   <header class="admin-page-head">
     <h1><Pencil size={22} /> 編輯文章</h1>
-    <a href="/admin" class="btn btn-ghost">← 返回列表</a>
+    <div style="display: flex; gap: 8px;">
+      <a href={`/admin/preview/${article.id}`} target="_blank" class="btn">預覽</a>
+      <a href="/admin" class="btn btn-ghost">← 返回列表</a>
+    </div>
   </header>
 
   <form id="article-form" data-id={article.id} class="card admin-form">
