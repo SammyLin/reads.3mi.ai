@@ -23,5 +23,11 @@ const nav = [
         <a href={item.href} class={pathname === item.href || pathname.startsWith(`${item.href}/`) ? 'active' : ''}>{item.label}</a>
       ))}
     </nav>
+    <nav class="product-nav" aria-label="3mi 產品">
+      <a href="https://3mi.ai">3mi</a>
+      <a href="/" class="active" aria-current="page">News</a>
+      <a href="https://trending.3mi.ai">Trending</a>
+      <a href="https://chunkup.3mi.ai">ChunkUp</a>
+    </nav>
   </div>
 </header>

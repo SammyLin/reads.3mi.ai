@@ -30,16 +30,20 @@
   --cat-life:       #db61a2;   /* 粉 */
 
   /* Border */
-  --border:         #e7e5e4;
-  --border-muted:   #d6d3d1;
+  --border:         #f0ece5;
+  --border-muted:   #e7e5e4;
 
   /* Layout */
   --max-width:      1200px;
   --content-width:  760px;
   --sidebar-width:  240px;
-  --radius-sm:      8px;
-  --radius:         10px;
-  --radius-lg:      16px;
+  --radius-sm:      10px;
+  --radius:         16px;
+  --radius-lg:      22px;
+  --ease: cubic-bezier(.32,.72,0,1);
+  --shadow-sm: 0 1px 2px rgba(41,37,36,.04);
+  --shadow-md: 0 1px 2px rgba(41,37,36,.04), 0 8px 24px rgba(41,37,36,.06);
+  --shadow-lg: 0 2px 6px rgba(41,37,36,.05), 0 18px 40px rgba(41,37,36,.10);
 
   /* Font — NotoSansTC + jfOpenHuninn（溫暖字體） */
   --font-sans: "jfOpenHuninn", "Noto Sans TC", -apple-system, BlinkMacSystemFont,
@@ -113,6 +117,9 @@ a:hover {
   padding-top: 16px;
   padding-bottom: 16px;
 }
+.product-nav { display:flex; gap:4px; padding-left:12px; border-left:1px solid var(--border); }
+.product-nav a { display:inline-flex; align-items:center; min-height:38px; color:var(--text-secondary); border:0; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:600; white-space:nowrap; }
+.product-nav a:hover,.product-nav a.active { color:var(--accent); background:var(--accent-soft); }
 
 .site-logo {
   font-size: 18px;
@@ -151,6 +158,9 @@ a:hover {
 }
 
 .site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
   color: var(--text-secondary);
   padding: 6px 12px;
   border-radius: var(--radius);
@@ -175,12 +185,13 @@ a:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 220ms var(--ease), box-shadow 220ms var(--ease), border-color 220ms var(--ease);
 }
 .card:hover {
   border-color: var(--border-muted);
-  box-shadow: 0 4px 12px rgba(41, 37, 36, 0.06);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
 }
 
 /* ===== Article Card ===== */
@@ -1377,9 +1388,10 @@ button:active, .action-primary:active, .action-secondary:active, .lead-signal:ac
 @keyframes signal-in { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
 @media (max-width: 760px) {
   .container { padding-inline: 18px; }
-  .site-header .container { align-items: flex-start; }
+  .site-header .container { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
   .site-nav { gap: 13px; overflow-x: auto; max-width: 58vw; padding-bottom: 4px; }
   .site-nav a { white-space: nowrap; }
+  .product-nav { order: 3; width: 100%; padding: 7px 0 0; border-left: 0; border-top: 1px solid var(--border); overflow-x: auto; }
   .logo-divider, .logo-section { display: none; }
   .news-hero { padding-top: 58px; }
   .news-hero h1 { font-size: 3.3rem; }
