@@ -30,7 +30,7 @@ Status colors express state only. Category/context colors are for dots + thin ed
 
 ## Typography
 
-- Stack: `Noto Sans TC` → `jf-open-huninn` → platform system font.
+- Stack: `jfOpenHuninn`(jf open 粉圓,via emfont `font.emtech.cc`,weight 400)→ `Noto Sans TC` → platform system font.
 - Smoothing: `-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;`.
 - Display: `clamp(2.35rem, 6vw, 3.65rem)`, line-height `1.05`, tracking `-0.03em` (up to `-0.048em` on the largest hero).
 - Page title (h1): line-height `1.1`, tracking `-0.03em`.
