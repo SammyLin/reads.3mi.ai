@@ -68,10 +68,13 @@ export const POST: APIRoute = async (context) => {
     tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
   };
 
+  // 提醒 OpenClaw：沒給封面圖，卡片會 fallback 成漸層，建議每篇帶 cover_image。
+  const warnings = data.cover_image ? undefined : ['cover_image 缺少：卡片將用漸層佔位。建議帶原文 og:image 或自製封面。'];
+
   if (existing) {
     await updateArticle(db, existing.id, data);
-    return json({ success: true, action: 'updated', id: existing.id, slug });
+    return json({ success: true, action: 'updated', id: existing.id, slug, cover_image: data.cover_image ?? null, warnings });
   }
   const id = await createArticle(db, data);
-  return json({ success: true, action: 'created', id, slug }, 201);
+  return json({ success: true, action: 'created', id, slug, cover_image: data.cover_image ?? null, warnings }, 201);
 };

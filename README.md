@@ -104,6 +104,8 @@ news-3mi/
 
 OpenClaw POST 以 `source_url` 優先去重，支援 `related_chunk_url`、`related_chunk_title` 建立 ChunkUp 雙向連結。先套用 `migrations/0003_add_content_links.sql`。
 
+**封面圖（重要）**：每篇強烈建議帶 `cover_image`（原文 `og:image` 或自製封面 URL）。沒帶的話卡片會 fallback 成分類色漸層佔位，視覺上像 80aj 但沒有真圖。ingest 回應會在缺圖時回 `warnings: ["cover_image 缺少…"]`，OpenClaw 端可據此補圖或告警。
+
 ## 後台
 
 - `/admin/login` — 密碼登入
