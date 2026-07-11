@@ -12,6 +12,7 @@ import {
 } from '../../lib/db';
 import { isAuthenticated } from '../../lib/auth';
 import { renderMarkdown, extractExcerpt } from '../../lib/markdown';
+import { withEdgeCache } from '../../lib/edgeCache';
 
 /** Render content_md to content_html if content_html is empty */
 function ensureHtml<T extends { content_md: string; content_html: string | null }>(a: T): T {
@@ -46,6 +47,13 @@ const getDBLocal = (context: any) => {
 };
 
 export const GET: APIRoute = async (context) => {
+  // admin scope 帶 auth，不進 edge cache；其餘公開查詢快取 60 秒
+  const isAdminScope = new URL(context.request.url).searchParams.get('scope') === 'admin';
+  if (isAdminScope) return handleGet(context);
+  return withEdgeCache(context, () => handleGet(context));
+};
+
+const handleGet: APIRoute = async (context) => {
   const db = getDBLocal(context);
   const url = new URL(context.request.url);
   const env = getEnv(context);

@@ -1,5 +1,6 @@
 import rss from '@astrojs/rss';
 import { listPublishedArticles, getDB } from '../lib/db';
+import { withEdgeCache } from '../lib/edgeCache';
 import type { APIContext } from 'astro';
 
 export const prerender = false;
@@ -11,6 +12,10 @@ const AUTHORSHIP_LABEL: Record<string, string> = {
 };
 
 export async function GET(context: APIContext) {
+  return withEdgeCache(context, () => buildFeed(context));
+}
+
+async function buildFeed(context: APIContext) {
   const authorshipParam = new URL(context.request.url).searchParams.get('authorship');
   const authorship = authorshipParam && authorshipParam in AUTHORSHIP_LABEL ? authorshipParam : undefined;
 
