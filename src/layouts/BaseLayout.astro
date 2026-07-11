@@ -41,6 +41,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://news.3mi.ai
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={fullTitle} />
   <meta name="twitter:description" content={description} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
 
   <!-- highlight.js theme — 暖色亮色主題 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-light.min.css" />
@@ -50,6 +51,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://news.3mi.ai
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@master/font/jfOpenHuninn.css" />
+
+  <!-- Google tag (gtag.js) -->
+  <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-4ZP8QZYCQC"></script>
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4ZP8QZYCQC');
+  </script>
 </head>
 <body>
   <Header />

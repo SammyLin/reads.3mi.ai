@@ -131,6 +131,7 @@ a:hover {
   flex-wrap: wrap;
 }
 .site-logo:hover { text-decoration: none; border-bottom-color: transparent; }
+.site-logo .brand-mark { width:34px; height:34px; border-radius:9px; flex:none; }
 .site-logo .logo-mark {
   color: var(--accent);
   font-family: var(--font-mono);
@@ -531,6 +532,7 @@ a:hover {
 .prose {
   max-width: var(--content-width);
   margin: 0 auto;
+  overflow-wrap: break-word;
 }
 .prose h1 {
   font-size: 36px;
@@ -633,6 +635,7 @@ a:hover {
 .prose a {
   color: var(--accent);
   border-bottom: 1px solid var(--accent-soft);
+  word-break: break-all;
 }
 .prose a:hover {
   border-bottom-color: var(--accent);

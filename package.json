@@ -21,7 +21,8 @@
     "astro": "^4.16.18",
     "highlight.js": "^11.10.0",
     "lucide-astro": "^0.556.0",
-    "marked": "^14.1.4"
+    "marked": "^14.1.4",
+    "opentype.js": "^2.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241224.0",

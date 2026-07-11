@@ -16,7 +16,7 @@ let categories: any[] = [];
 let seriesList: any[] = [];
 
 try {
-  const db = getDB(Astro.locals);
+  const db = getDB(Astro);
   // 透過 slug 找 — 但 id 是數字，這邊先嘗試兩種
   if (id && /^\d+$/.test(id)) {
     const r = await db.prepare(`SELECT slug FROM articles WHERE id = ?`).bind(parseInt(id)).first();

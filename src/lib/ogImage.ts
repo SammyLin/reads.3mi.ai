@@ -46,6 +46,50 @@ export function buildCoverSvg(opts: { title: string; color?: string; label?: str
 </svg>`;
 }
 
+/**
+ * Path 版品牌封面：文字用 opentype.js 轉成向量路徑，SVG 不依賴檢視端字型。
+ * FB/LINE 等社群爬蟲沒有中文字型，<text> 會變亂碼；<path> 保證正確。
+ */
+export function buildCoverSvgPaths(
+  font: { getPath: (text: string, x: number, y: number, size: number) => { toPathData: (d: number) => string } },
+  opts: { title: string; color?: string; label?: string },
+): string {
+  const color = opts.color || '#ca8a04';
+  const label = opts.label || '';
+  const lines = wrapTitle(opts.title || '', 15, 3);
+  const startY = 300 - (lines.length - 1) * 42;
+  const titlePaths = lines
+    .map((ln, i) => `<path d="${font.getPath(ln, 90, startY + i * 88, 72).toPathData(2)}" fill="#292524"/>`)
+    .join('\n  ');
+  const labelPath = label
+    ? `<rect x="90" y="96" rx="8" width="${Math.min(360, 44 + label.length * 30)}" height="46" fill="${color}" fill-opacity="0.14"/>
+  <path d="${font.getPath(label, 112, 128, 26).toPathData(2)}" fill="${color}"/>`
+    : '';
+  const sitePath = `<path d="${font.getPath('news.3mi.ai', 90, 600, 30).toPathData(2)}" fill="#57534e"/>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${color}" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#faf8f5" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="#faf8f5"/>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <rect x="0" y="0" width="12" height="675" fill="${color}"/>
+  ${labelPath}
+  ${titlePaths}
+  ${sitePath}
+  <circle cx="1080" cy="560" r="8" fill="${color}"/>
+</svg>`;
+}
+
+/** 從文章 Markdown 抓第一張內文圖（og:image 優先用真圖）。 */
+export function extractFirstImage(contentMd: string): string | null {
+  const m = (contentMd || '').match(/!\[[^\]]*\]\(([^)\s]+)[^)]*\)/) || (contentMd || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1] : null;
+}
+
 /** 相對封面 URL（存進 cover_image，卡片/文章頁當 img 用）。 */
 export function generatedCoverPath(opts: { title: string; color?: string; label?: string }): string {
   const p = new URLSearchParams();

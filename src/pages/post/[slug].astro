@@ -1,13 +1,35 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getDB } from '../../lib/db';
+import { getDB, getArticleBySlug } from '../../lib/db';
+import { extractFirstImage } from '../../lib/ogImage';
 
 export const prerender = false;
 
 const { slug } = Astro.params;
+
+let ogArticle: any = null;
+try {
+  const db = getDB(Astro);
+  ogArticle = slug ? await getArticleBySlug(db, slug) : null;
+} catch (e) {
+  console.error(e);
+}
+if (!ogArticle || ogArticle.status !== 'published') return Astro.redirect('/404');
+
+// og:image 優先序：真封面 > 第一張內文圖 > 自動品牌封面（path 版 SVG，中文安全）
+const isGeneratedCover = String(ogArticle.cover_image || '').startsWith('/api/og');
+const rawCover = (!isGeneratedCover && ogArticle.cover_image)
+  || extractFirstImage(ogArticle.content_md)
+  || (ogArticle.cover_image ? `${ogArticle.cover_image}&pv=2` : '/og-default.png');
+const ogImage = new URL(rawCover, Astro.url.origin).toString();
 ---
 
-<BaseLayout title="文章" description="" showSidebars={false}>
+<BaseLayout
+  title={ogArticle.title}
+  description={(ogArticle.excerpt || '').slice(0, 200)}
+  ogImage={ogImage}
+  showSidebars={false}
+>
   <article id="article-container">
     <div class="card text-secondary" style="padding: 40px; text-align: center;">
       <p>載入中...</p>

@@ -93,7 +93,10 @@ import { ClipboardList } from 'lucide-astro';
       color: var(--text-muted);
     }
     .admin-title { font-weight: 600; color: var(--text-primary); }
-    .admin-slug { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .admin-table td:nth-child(2),
+    .admin-table td:nth-child(3),
+    .admin-table td:nth-child(4),
+    .admin-table td:nth-child(5) { white-space: nowrap; width: 1%; }
     .admin-status {
       display: inline-flex;
       align-items: center;
@@ -105,15 +108,25 @@ import { ClipboardList } from 'lucide-astro';
     .admin-status.is-published { background: rgba(21,128,61,.12); color: #15803d; }
     .admin-status.is-draft { background: var(--accent-soft); color: var(--accent-hover); }
     .admin-date { font-size: 13px; color: var(--text-muted); }
-    .admin-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+    .admin-actions { display: inline-flex; gap: 6px; flex-wrap: nowrap; }
     .admin-actions .btn { font-size: 12px; padding: 5px 11px; }
+    .admin-actions .btn-danger {
+      background: transparent;
+      border: 1px solid rgba(248, 81, 73, .35);
+      color: #d1242f;
+    }
+    .admin-actions .btn-danger:hover {
+      background: rgba(248, 81, 73, .08);
+      border-color: #d1242f;
+    }
   </style>
 
   <script>
     async function init() {
       // Check auth
       const authRes = await fetch('/api/auth');
-      if (!authRes.ok) {
+      const { authenticated } = authRes.ok ? await authRes.json() : { authenticated: false };
+      if (!authenticated) {
         window.location.href = '/admin/login';
         return;
       }
@@ -123,6 +136,10 @@ import { ClipboardList } from 'lucide-astro';
 
       // Load articles
       const res = await fetch('/api/articles?scope=admin');
+      if (res.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
       const { articles = [] } = await res.json();
 
       const tbody = document.getElementById('articles-tbody');
@@ -137,7 +154,6 @@ import { ClipboardList } from 'lucide-astro';
         <tr>
           <td>
             <div class="admin-title">${escapeHtml(a.title)}</div>
-            <div class="admin-slug">/${escapeHtml(a.slug)}</div>
           </td>
           <td>
             ${a.category ? `<span class="tag" style="background: ${a.category.color}22; color: ${a.category.color}; border-color: ${a.category.color}33;">${escapeHtml(a.category.name)}</span>` : ''}
