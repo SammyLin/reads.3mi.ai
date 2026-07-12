@@ -2,11 +2,11 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="主題合集" description="把相關文章整理成主題課程與系列，一次讀懂一個題目。">
+<BaseLayout title="主題合集" description="按主題整理現有文章，快速找到想讀的內容。" wide={true}>
   <header class="collection-header">
     <p class="eyebrow">Topics</p>
     <h1>主題合集</h1>
-    <p>把相關文章整理成系列課程 — 從入門到實戰，順著讀完一個題目。</p>
+    <p>從現有文章出發，按主題快速找到值得讀的內容。</p>
   </header>
 
   <div id="series-content">
@@ -14,6 +14,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p>載入中...</p>
     </div>
   </div>
+
+  <section id="series-latest" class="series-latest" hidden>
+    <div class="collection-section-heading">
+      <p class="eyebrow">Start here</p>
+      <h2>先從最新文章開始</h2>
+    </div>
+    <div id="series-latest-list" class="collection-list"></div>
+  </section>
 </BaseLayout>
 
 <script>
@@ -27,21 +35,54 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const container = document.getElementById('series-content');
     if (!container) return;
     try {
-      const res = await fetch('/api/series');
-      const { series = [] } = await res.json();
-      if (series.length === 0) {
-        container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">還沒有合集。</div>';
+      const articlesRes = await fetch('/api/articles?limit=100');
+      const { articles = [] } = await articlesRes.json();
+      const topicMap = new Map<string, any>();
+      for (const article of articles) {
+        if (!article.category) continue;
+        const key = article.category.slug;
+        const topic = topicMap.get(key) || {
+          ...article.category,
+          article_count: 0,
+          cover_image: article.cover_image,
+        };
+        topic.article_count += 1;
+        if (!topic.cover_image && article.cover_image) topic.cover_image = article.cover_image;
+        topicMap.set(key, topic);
+      }
+      const topics = Array.from(topicMap.values()).sort((a, b) => b.article_count - a.article_count);
+      if (topics.length === 0) {
+        container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">目前還沒有已發布文章。</div>';
         return;
       }
-      container.innerHTML = '<div class="series-grid">' + series.map((s: any) => `
-        <a href="/series/${escapeHtml(s.slug)}" class="card series-card">
-          ${coverThumb(s, 'card-thumb series-card-thumb')}
-          <div class="series-card-count">${s.article_count} 篇</div>
-          <h2>${escapeHtml(s.title)}</h2>
-          ${s.description ? `<p>${escapeHtml(s.description)}</p>` : ''}
-          <span class="series-card-link">看合集 →</span>
+      container.innerHTML = '<div class="series-grid">' + topics.map((topic: any) => `
+        <a href="/category/${escapeHtml(topic.slug)}" class="card series-card" style="--topic-color:${escapeHtml(topic.color || '#ca8a04')}">
+          ${coverThumb({ ...topic, category: topic }, 'card-thumb series-card-thumb')}
+          <div class="series-card-count">${topic.article_count} 篇文章</div>
+          <h2>${escapeHtml(topic.name)}</h2>
+          ${topic.description ? `<p>${escapeHtml(topic.description)}</p>` : ''}
+          <span class="series-card-link">探索主題 →</span>
         </a>
       `).join('') + '</div>';
+
+      const latest = document.getElementById('series-latest');
+      const latestList = document.getElementById('series-latest-list');
+      if (latest && latestList && articles.length) {
+        latestList.innerHTML = articles.slice(0, 6).map((a: any) => `
+          <a href="/post/${escapeHtml(a.slug)}" class="collection-card">
+            <div class="collection-card-body">
+              <div class="collection-card-meta">
+                ${a.category ? `<span style="color:${a.category.color}">${escapeHtml(a.category.name)}</span>` : ''}
+                <time>${a.published_at ? new Date(a.published_at).toLocaleDateString('zh-TW') : ''}</time>
+                <span>${a.reading_time || 1} 分鐘</span>
+              </div>
+              <h3>${escapeHtml(a.title)}</h3>
+              ${a.excerpt ? `<p>${escapeHtml(a.excerpt)}</p>` : ''}
+            </div>
+            ${coverThumb(a, 'card-thumb collection-thumb')}
+          </a>`).join('');
+        latest.hidden = false;
+      }
     } catch (e) {
       container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">載入失敗。</div>';
     }
@@ -50,17 +91,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   loadSeries();
 </script>
 
-<style>
+<style is:global>
   .series-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: clamp(16px, 2vw, 28px);
   }
+  .series-latest { margin-top: clamp(48px, 8vw, 80px); }
   .series-card {
     display: flex;
     flex-direction: column;
     gap: 8px;
     padding: 24px;
+    min-width: 0;
   }
   .series-card .series-card-thumb {
     margin: -24px -24px 8px;
@@ -69,12 +112,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   .series-card-count {
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--topic-color, var(--accent));
     text-transform: uppercase;
     letter-spacing: .06em;
   }
   .series-card h2 {
-    font-size: 20px;
+    font-size: clamp(22px, 2.2vw, 30px);
     letter-spacing: -.02em;
   }
   .series-card p {
@@ -87,6 +130,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     margin-top: 4px;
     font-size: 13px;
     font-weight: 500;
-    color: var(--accent);
+    color: var(--topic-color, var(--accent));
+  }
+  @media (max-width: 520px) {
+    .series-grid { grid-template-columns: minmax(0, 1fr); }
+    .series-card { padding: 18px; }
+    .series-card .series-card-thumb { margin: -18px -18px 8px; }
   }
 </style>

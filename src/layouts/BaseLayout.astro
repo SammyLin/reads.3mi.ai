@@ -9,9 +9,10 @@ interface Props {
   description?: string;
   ogImage?: string;
   showSidebars?: boolean;
+  wide?: boolean;
 }
 
-const { title, description = 'Sammy 的 AI 工程筆記', ogImage, showSidebars = true } = Astro.props;
+const { title, description = 'Sammy 的 AI 工程筆記', ogImage, showSidebars = true, wide = false } = Astro.props;
 
 const fullTitle = title === 'reads.3mi.ai' ? title : `${title} · reads.3mi.ai`;
 const canonical = new URL(Astro.url.pathname, Astro.site || 'https://reads.3mi.ai').toString();
@@ -67,7 +68,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://reads.3mi.a
 </head>
 <body>
   <Header />
-  <main class="container">
+  <main class:list={['container', { 'container-wide': wide }]}>
     {showSidebars ? (
       <div class="site-grid">
         <aside class="sidebar sidebar-left">
@@ -91,6 +92,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://reads.3mi.a
   <style>
     .content { min-width: 0; }
     .content-full { padding: 32px 0; }
+    .container-wide { max-width: 1600px; }
   </style>
 </body>
 </html>

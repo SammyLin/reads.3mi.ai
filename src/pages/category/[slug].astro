@@ -68,7 +68,16 @@ async function loadCategory() {
     }
 
     if (articles.length === 0) {
-      container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">這個分類還沒有文章。</div>';
+      const latestRes = await fetch('/api/articles?limit=6');
+      const { articles: latest = [] } = await latestRes.json();
+      container.innerHTML = `
+        <section class="collection-empty">
+          <p class="eyebrow">Coming soon</p>
+          <h2>這個頻道正在整理中</h2>
+          <p>還沒有歸到這裡的文章。先讀最新發布內容，或從其他頻道開始。</p>
+          <a class="collection-empty-action" href="/">瀏覽所有文章</a>
+        </section>
+        ${latest.length ? `<section class="collection-recommendations"><div class="collection-section-heading"><p class="eyebrow">Latest</p><h2>最新文章</h2></div><div class="collection-list">${latest.map(renderCollectionCard).join('')}</div></section>` : ''}`;
       return;
     }
 
@@ -121,7 +130,9 @@ function renderCollectionCard(article) {
 function renderPagination(page, totalPages, totalItems) {
   if (totalPages <= 1) return `<span class="pagination-summary">共 ${totalItems} 篇</span>`;
   const pages = [];
-  for (let i = 1; i <= totalPages; i++) {
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, page + 2);
+  for (let i = start; i <= end; i++) {
     pages.push(`<button type="button" data-page="${i}" ${i === page ? 'class="active" aria-current="page"' : ''}>${i}</button>`);
   }
   return `
