@@ -59,6 +59,29 @@ const AUTHORSHIP = {
   translation: { label: '譯文', icon: 'languages' },
 };
 
+// 英文語塊練習：從 ChunkUp 公開 feed 拉本文對應課程的語塊,像推薦文章一樣一個區塊
+async function loadChunkPractice(article) {
+  const body = document.getElementById('chunk-practice-body');
+  if (!body) return;
+  const url = article.related_chunk_url;
+  const fallback = `<a class="source-card" href="${escapeAttr(url)}" target="_blank" rel="noopener"><span>ChunkUp</span><strong>${escapeHtml(article.related_chunk_title || '練習相關英文語塊')}</strong></a>`;
+  try {
+    const res = await fetch('https://chunkup.3mi.ai/content-feed.json');
+    const feed = await res.json();
+    const norm = (u) => String(u || '').replace(/\/+$/, '');
+    const item = (feed.items || []).find((it) => norm(it.url) === norm(url));
+    if (!item || !(item.chunks || []).length) { body.innerHTML = fallback; return; }
+    body.innerHTML = `
+      <div class="chunk-practice-grid">${item.chunks.slice(0, 6).map((c) => `
+        <a class="chunk-pill" href="${escapeAttr(item.url)}" target="_blank" rel="noopener">
+          <strong>${escapeHtml(c.text)}</strong>
+          <span>${escapeHtml(c.gloss || c.function || '')}</span>
+        </a>`).join('')}
+      </div>
+      <a class="source-card" style="margin-top: 16px;" href="${escapeAttr(item.url)}" target="_blank" rel="noopener"><span>ChunkUp · 免費</span><strong>去練這課：${escapeHtml(item.title)} — 聽發音、跟讀、影片逐句跳播</strong></a>`;
+  } catch { body.innerHTML = fallback; }
+}
+
 // 推薦文章：同分類優先，不足補最新，排除當前文章
 async function loadRelated(article) {
   const section = document.getElementById('related-posts');
@@ -172,8 +195,6 @@ async function loadArticle() {
 
         <div class="markdown-content">${article.content_html || '<p>內容待補。</p>'}</div>
 
-        ${isHttpUrl(article.related_chunk_url) ? `<a class="source-card" style="margin-top: 28px;" href="${escapeAttr(article.related_chunk_url)}" target="_blank" rel="noopener"><span>英文語塊練習</span><strong>${escapeHtml(article.related_chunk_title || '練習相關英文語塊')}</strong></a>` : ''}
-
         ${disclosure}
 
         ${(article.tags && article.tags.length > 0) ? `
@@ -184,6 +205,12 @@ async function loadArticle() {
             </div>
           </footer>` : ''}
 
+        ${isHttpUrl(article.related_chunk_url) ? `
+        <section class="related-posts" id="chunk-practice">
+          <h2>英文語塊練習</h2>
+          <div id="chunk-practice-body"></div>
+        </section>` : ''}
+
         <section class="related-posts" id="related-posts" hidden>
           <h2>推薦文章</h2>
           <div class="related-grid" id="related-grid"></div>
@@ -191,6 +218,7 @@ async function loadArticle() {
 
       </article>`;
 
+    loadChunkPractice(article);
     loadRelated(article);
 
     const progressBar = document.getElementById('reading-progress-bar');
