@@ -28,9 +28,9 @@ async function buildFeed(context: APIContext) {
   }
 
   return rss({
-    title: authorship ? `news.3mi.ai — ${AUTHORSHIP_LABEL[authorship]}` : 'news.3mi.ai',
+    title: authorship ? `reads.3mi.ai — ${AUTHORSHIP_LABEL[authorship]}` : 'reads.3mi.ai',
     description: 'Sammy 的 AI 工程筆記',
-    site: context.site || 'https://news.3mi.ai',
+    site: context.site || 'https://reads.3mi.ai',
     items: articles.map((article) => ({
       title: article.title,
       description: article.excerpt || '',

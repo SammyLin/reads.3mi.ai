@@ -41,7 +41,7 @@ export function buildCoverSvg(opts: { title: string; color?: string; label?: str
   ${label ? `<rect x="90" y="96" rx="8" width="${Math.min(360, 44 + label.length * 30)}" height="46" fill="${color}" fill-opacity="0.14"/>
   <text x="112" y="128" font-family="'Noto Sans TC',system-ui,sans-serif" font-size="26" font-weight="700" fill="${color}">${xmlEscape(label)}</text>` : ''}
   <text font-family="'Noto Sans TC',system-ui,sans-serif" font-size="72" font-weight="800" fill="#292524" letter-spacing="-1.5">${titleTspans}</text>
-  <text x="90" y="600" font-family="'Noto Sans TC',ui-monospace,monospace" font-size="30" font-weight="700" fill="#57534e">news.3mi.ai</text>
+  <text x="90" y="600" font-family="'Noto Sans TC',ui-monospace,monospace" font-size="30" font-weight="700" fill="#57534e">reads.3mi.ai</text>
   <circle cx="1080" cy="560" r="8" fill="${color}"/>
 </svg>`;
 }
@@ -65,7 +65,7 @@ export function buildCoverSvgPaths(
     ? `<rect x="90" y="96" rx="8" width="${Math.min(360, 44 + label.length * 30)}" height="46" fill="${color}" fill-opacity="0.14"/>
   <path d="${font.getPath(label, 112, 128, 26).toPathData(2)}" fill="${color}"/>`
     : '';
-  const sitePath = `<path d="${font.getPath('news.3mi.ai', 90, 600, 30).toPathData(2)}" fill="#57534e"/>`;
+  const sitePath = `<path d="${font.getPath('reads.3mi.ai', 90, 600, 30).toPathData(2)}" fill="#57534e"/>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img">
   <defs>

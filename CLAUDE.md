@@ -1,4 +1,4 @@
-# news.3mi.ai
+# reads.3mi.ai
 
 Astro site on Cloudflare Pages + D1 + R2.
 

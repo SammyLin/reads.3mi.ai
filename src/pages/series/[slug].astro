@@ -54,7 +54,7 @@ const { slug } = Astro.params;
 
       if (titleEl) titleEl.textContent = series.title;
       if (descEl) descEl.textContent = series.description || '';
-      document.title = `${series.title} · news.3mi.ai`;
+      document.title = `${series.title} · reads.3mi.ai`;
 
       if (articles.length === 0) {
         container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">這個合集還沒有文章。</div>';

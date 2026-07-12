@@ -1,4 +1,4 @@
-# news.3mi.ai — AI 工程筆記網站規格
+# reads.3mi.ai — AI 工程筆記網站規格
 
 > **Linear:** [OTT-89](https://linear.app/sammylin/issue/OTT-89)
 > **風格參考:** [80aj.com](https://www.80aj.com/)（配色自訂，純淨版無廣告）
@@ -16,7 +16,7 @@
 | 文章量 | 起步放個位數，未來擴展 |
 | Markdown 編輯 | ✅ 支援 |
 | 廣告 | ❌ 純淨版 |
-| 域名 | `news.3mi.ai` |
+| 域名 | `reads.3mi.ai` |
 | 靜 / 動態 | 動態（前端 SSG + 後端 Functions） |
 
 ---
@@ -25,7 +25,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  news.3mi.ai (Cloudflare Pages)                     │
+│  reads.3mi.ai (Cloudflare Pages)                     │
 │                                                     │
 │  ┌──────────────────────────────────────────────┐  │
 │  │  Astro SSG（靜態殼層）                       │  │
@@ -268,9 +268,9 @@ news-3mi/
    wrangler pages deploy dist --project-name=news-3mi
    ```
 
-4. **綁定域名 `news.3mi.ai`**
+4. **綁定域名 `reads.3mi.ai`**
    - Cloudflare Dashboard → Pages → news-3mi → Custom domains
-   - 加 `news.3mi.ai`（假設 3mi.ai zone 已在 Cloudflare）
+   - 加 `reads.3mi.ai`（假設 3mi.ai zone 已在 Cloudflare）
 
 ---
 

@@ -22,7 +22,7 @@ function loadFont(requestUrl: string): Promise<Font> {
 /** 動態產生品牌封面 SVG。cover_image 沒真圖時用這個。 */
 export const GET: APIRoute = async (context) => {
   const url = new URL(context.request.url);
-  const title = url.searchParams.get('title') || 'news.3mi.ai';
+  const title = url.searchParams.get('title') || 'reads.3mi.ai';
   const color = url.searchParams.get('color') || '#ca8a04';
   const label = url.searchParams.get('label') || '';
 

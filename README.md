@@ -1,4 +1,4 @@
-# news.3mi.ai
+# reads.3mi.ai
 
 Sammy 的 AI 工程筆記站 — 內容風格參考 [80aj.com](https://www.80aj.com/)，配色採 3mi 家族的溫暖 cream / gold 主題、純淨版無廣告。
 
@@ -49,7 +49,7 @@ npm run build
 npx wrangler pages deploy ./dist --project-name=news-3mi
 
 # 5. 綁 custom domain
-# Cloudflare Dashboard → Pages → news-3mi → Custom domains → news.3mi.ai
+# Cloudflare Dashboard → Pages → news-3mi → Custom domains → reads.3mi.ai
 ```
 
 ## 專案結構
@@ -122,7 +122,7 @@ OpenClaw POST 以 `source_url` 優先去重，支援 `related_chunk_url`、`rela
 
 ## 內容路線圖：對齊 80aj.com 的內容模型
 
-目標：把 news.3mi.ai 做成像 [80aj.com](https://www.80aj.com/) 那樣的**原創長文型 AI 工程教學站**，而不是純新聞聚合。
+目標：把 reads.3mi.ai 做成像 [80aj.com](https://www.80aj.com/) 那樣的**原創長文型 AI 工程教學站**，而不是純新聞聚合。
 
 **80aj 的內容模型：**
 - 原創長文教學（大模型 / Agent / 工具實戰），非只是外部來源摘要。

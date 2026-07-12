@@ -40,7 +40,7 @@ async function loadTag() {
     const res = await fetchCollectionPage(slug, getPageFromUrl(), pageSize);
     const { articles = [], pagination = {} } = await res.json();
 
-    document.title = `#${slug} — news.3mi.ai`;
+    document.title = `#${slug} — reads.3mi.ai`;
     if (titleEl) titleEl.textContent = `#${slug}`;
     if (countEl) countEl.textContent = String(pagination.total || articles.length);
 

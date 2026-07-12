@@ -13,8 +13,8 @@ interface Props {
 
 const { title, description = 'Sammy 的 AI 工程筆記', ogImage, showSidebars = true } = Astro.props;
 
-const fullTitle = title === 'news.3mi.ai' ? title : `${title} · news.3mi.ai`;
-const canonical = new URL(Astro.url.pathname, Astro.site || 'https://news.3mi.ai').toString();
+const fullTitle = title === 'reads.3mi.ai' ? title : `${title} · reads.3mi.ai`;
+const canonical = new URL(Astro.url.pathname, Astro.site || 'https://reads.3mi.ai').toString();
 ---
 
 <!doctype html>
@@ -23,18 +23,24 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://news.3mi.ai
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="generator" content={Astro.generator} />
+  <script is:inline>
+    // 舊網域 fallback:靜態頁不經 SSR middleware,client 端補 301 缺口
+    if (location.hostname === 'news.3mi.ai') {
+      location.replace('https://reads.3mi.ai' + location.pathname + location.search + location.hash);
+    }
+  </script>
   <title>{fullTitle}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="alternate" type="application/rss+xml" title="news.3mi.ai RSS" href="/rss.xml" />
+  <link rel="alternate" type="application/rss+xml" title="reads.3mi.ai RSS" href="/rss.xml" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content={fullTitle} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonical} />
-  <meta property="og:site_name" content="news.3mi.ai" />
+  <meta property="og:site_name" content="reads.3mi.ai" />
   {ogImage && <meta property="og:image" content={ogImage} />}
 
   <!-- Twitter Card -->

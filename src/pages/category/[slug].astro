@@ -60,7 +60,7 @@ async function loadCategory() {
     const category = categories.find((c) => c.slug === slug);
 
     if (category) {
-      document.title = `${category.name} — news.3mi.ai`;
+      document.title = `${category.name} — reads.3mi.ai`;
       if (titleEl) titleEl.textContent = `${category.name}`;
       if (descEl) descEl.textContent = `${category.description || ''} 共 ${pagination.total || articles.length} 篇。`;
     } else {

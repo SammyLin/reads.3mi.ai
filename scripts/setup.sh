@@ -45,10 +45,10 @@ case "${1:-help}" in
     npx wrangler d1 execute news-3mi-db --remote --command="SELECT COUNT(*) as total FROM articles" 2>&1 | grep total
     echo ""
     echo "== DNS =="
-    dig news.3mi.ai +short 2>&1
+    dig reads.3mi.ai +short 2>&1
     echo ""
     echo "== HTTPS =="
-    curl -s -o /dev/null -w "news.3mi.ai: %{http_code}\n" --max-time 10 https://news.3mi.ai
+    curl -s -o /dev/null -w "reads.3mi.ai: %{http_code}\n" --max-time 10 https://reads.3mi.ai
     ;;
   *)
     echo "news-3mi.ai 維護指令"
