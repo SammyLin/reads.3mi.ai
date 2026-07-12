@@ -17,6 +17,11 @@ import { ClipboardList } from 'lucide-astro';
   </div>
 
   <div id="admin-content" style="display: none;">
+    <div id="review-reminder" class="review-reminder" style="display: none;" role="status">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <span id="review-reminder-text"></span>
+      <button type="button" id="review-reminder-filter" class="btn">查看待審</button>
+    </div>
     <div class="card admin-table-card">
       <div id="articles-table"></div>
     </div>
@@ -46,6 +51,23 @@ import { ClipboardList } from 'lucide-astro';
       color: var(--text-muted);
     }
     .admin-placeholder:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
+
+    .review-reminder {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-hover);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-sm, 6px);
+    }
+    .review-reminder svg { flex-shrink: 0; color: var(--accent); }
+    .review-reminder span { flex: 1; }
+    .review-reminder .btn { font-size: 12px; padding: 5px 11px; }
 
     .admin-table-card {
       padding: 0;
@@ -241,7 +263,13 @@ import { ClipboardList } from 'lucide-astro';
 
       const categoryNames = [...new Set(articles.map((a: any) => a.category?.name).filter(Boolean))].sort() as string[];
 
-      new Tabulator('#articles-table', {
+      const draftCount = articles.filter((a: any) => a.status === 'draft').length;
+      if (draftCount > 0) {
+        document.getElementById('review-reminder')!.style.display = 'flex';
+        document.getElementById('review-reminder-text')!.textContent = `有 ${draftCount} 篇草稿尚未審核`;
+      }
+
+      const table = new Tabulator('#articles-table', {
         data: articles,
         layout: 'fitColumns',
         pagination: true,
@@ -329,6 +357,10 @@ import { ClipboardList } from 'lucide-astro';
             },
           },
         ],
+      });
+
+      document.getElementById('review-reminder-filter')!.addEventListener('click', () => {
+        table.setHeaderFilterValue('status', 'draft');
       });
     }
 
