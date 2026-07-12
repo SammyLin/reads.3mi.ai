@@ -3,8 +3,6 @@ import { getDB } from '../../lib/db';
 
 export const prerender = false;
 
-const SITE_URL = 'https://reads.3mi.ai';
-
 const getEnv = (context: any) => context.locals.runtime?.env || context.locals.cloudflare?.env || context.locals.env || {};
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status,
@@ -29,6 +27,9 @@ export const GET: APIRoute = async (context) => {
     FROM articles WHERE status='draft' ORDER BY updated_at DESC LIMIT 50
   `).all();
   const drafts = (result.results || []) as Array<{ id: number; slug: string; title: string; created_at: string; updated_at: string }>;
+
+  // 連結跟著服務網域走（news.3mi.ai 現行、reads.3mi.ai 切換後都通）
+  const SITE_URL = context.url.origin;
 
   return json({
     pending_count: drafts.length,
