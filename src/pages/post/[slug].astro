@@ -162,7 +162,6 @@ async function loadArticle() {
           ${article.excerpt ? `<p style="font-size: 16px; color: var(--text-secondary); margin-top: 12px;">${escapeHtml(article.excerpt)}</p>` : ''}
           <div class="article-actions">
             ${isHttpUrl(article.source_url) ? `<a class="source-card" href="${escapeAttr(article.source_url)}" target="_blank" rel="noopener"><span>原文來源</span><strong>${sourceLabel}</strong></a>` : ''}
-            ${isHttpUrl(article.related_chunk_url) ? `<a class="source-card" href="${escapeAttr(article.related_chunk_url)}" target="_blank" rel="noopener"><span>延伸練習 · ChunkUp</span><strong>${escapeHtml(article.related_chunk_title || '練習相關英文語塊')}</strong></a>` : ''}
             <a class="source-card" href="/archive"><span>返回</span><strong>文章存檔</strong></a>
           </div>
         </header>
@@ -172,6 +171,8 @@ async function loadArticle() {
         ${translationNote}
 
         <div class="markdown-content">${article.content_html || '<p>內容待補。</p>'}</div>
+
+        ${isHttpUrl(article.related_chunk_url) ? `<a class="source-card" style="margin-top: 28px;" href="${escapeAttr(article.related_chunk_url)}" target="_blank" rel="noopener"><span>英文語塊練習</span><strong>${escapeHtml(article.related_chunk_title || '練習相關英文語塊')}</strong></a>` : ''}
 
         ${disclosure}
 
