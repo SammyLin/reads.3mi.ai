@@ -1,0 +1,237 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { ClipboardCheck } from 'lucide-astro';
+---
+
+<AdminLayout>
+  <header class="admin-page-head">
+    <h1><ClipboardCheck size={22} /> 草稿審稿台</h1>
+    <div style="display: flex; gap: 8px;">
+      <a href="/admin" class="btn">文章管理</a>
+      <a href="/admin/new" class="btn btn-primary">新增文章</a>
+    </div>
+  </header>
+
+  <div id="auth-check" class="card admin-placeholder">
+    <p>驗證登入中...</p>
+  </div>
+
+  <div id="admin-content" style="display: none;">
+    <p class="review-lede">每篇草稿直接處置:<strong>發佈</strong>上線、<strong>刪除</strong>移除(無法復原)、不動就維持草稿。點「預覽全文」展開站上實際排版。</p>
+    <div id="draft-list"></div>
+    <div id="empty-state" class="card admin-placeholder" style="display: none;">
+      <p>沒有待審草稿,收工。</p>
+    </div>
+  </div>
+
+  <style>
+    .admin-page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .admin-page-head h1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .admin-page-head h1 :global(svg) { color: var(--accent); }
+
+    .admin-placeholder {
+      padding: 48px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .admin-placeholder:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
+
+    .review-lede {
+      margin-bottom: 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+  </style>
+
+  <style is:global>
+    .draft-card {
+      margin-bottom: 20px;
+      padding: 20px 22px;
+    }
+    .draft-card:hover { transform: none; }
+    .draft-card.is-published { border-color: var(--success, #15803d); }
+    .draft-card .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .draft-card .chip {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-subtle, #f5f3ef);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 10px;
+      white-space: nowrap;
+    }
+    .draft-card .chip-id {
+      background: var(--text, #292524);
+      color: var(--bg, #faf8f5);
+      border-color: var(--text, #292524);
+      font-variant-numeric: tabular-nums;
+    }
+    .draft-card h2 {
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: -.02em;
+      margin: 0 0 8px;
+    }
+    .draft-card .excerpt {
+      margin: 0 0 14px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .draft-card .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .draft-card .publish-note {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--success, #15803d);
+    }
+    .draft-card details { margin-top: 14px; border-top: 1px solid var(--border); }
+    .draft-card summary {
+      cursor: pointer;
+      padding-top: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .draft-card summary:hover { color: var(--accent-hover, var(--accent)); }
+    .draft-card iframe {
+      width: 100%;
+      height: 70vh;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 10px;
+      background: #fff;
+    }
+  </style>
+
+  <script>
+    function escapeHtml(s: unknown) {
+      if (typeof s !== 'string') return '';
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function draftCard(a: any) {
+      const cjkNote = a.reading_time ? `<span class="chip">${a.reading_time} 分鐘</span>` : '';
+      return `
+        <article class="card draft-card" data-id="${a.id}" data-slug="${escapeHtml(a.slug)}">
+          <div class="meta-row">
+            <span class="chip chip-id">#${a.id}</span>
+            <span class="chip">${escapeHtml(a.content_type || 'signal')}</span>
+            ${cjkNote}
+            <span class="chip">${escapeHtml(a.category?.name || '未分類')}</span>
+          </div>
+          <h2>${escapeHtml(a.title)}</h2>
+          <p class="excerpt">${escapeHtml(a.excerpt || '')}</p>
+          <div class="actions">
+            <button type="button" class="btn btn-primary" data-action="publish">發佈</button>
+            <button type="button" class="btn btn-danger" data-action="delete">刪除</button>
+            <a href="/admin/edit/${a.id}" class="btn">編輯</a>
+            <span class="publish-note" style="display: none;"></span>
+          </div>
+          <details data-preview-id="${a.id}">
+            <summary>預覽全文</summary>
+          </details>
+        </article>`;
+    }
+
+    async function init() {
+      const authRes = await fetch('/api/auth');
+      const { authenticated } = authRes.ok ? await authRes.json() : { authenticated: false };
+      if (!authenticated) {
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      document.getElementById('auth-check')!.style.display = 'none';
+      document.getElementById('admin-content')!.style.display = 'block';
+
+      const res = await fetch('/api/articles?scope=admin');
+      if (res.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+      const { articles = [] } = await res.json();
+      const drafts = articles.filter((a: any) => a.status === 'draft');
+
+      const list = document.getElementById('draft-list')!;
+      if (!drafts.length) {
+        document.getElementById('empty-state')!.style.display = 'block';
+        return;
+      }
+      list.innerHTML = drafts.map(draftCard).join('');
+
+      // 預覽:第一次展開才載入 iframe
+      list.querySelectorAll('details[data-preview-id]').forEach((d) => {
+        d.addEventListener('toggle', () => {
+          if ((d as HTMLDetailsElement).open && !d.querySelector('iframe')) {
+            const iframe = document.createElement('iframe');
+            iframe.src = `/admin/preview/${d.getAttribute('data-preview-id')}`;
+            iframe.loading = 'lazy';
+            d.appendChild(iframe);
+          }
+        }, { once: false });
+      });
+
+      list.addEventListener('click', async (e) => {
+        const btn = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
+        if (!btn) return;
+        const card = btn.closest('.draft-card') as HTMLElement;
+        const id = card.dataset.id;
+        const title = card.querySelector('h2')!.textContent || '';
+
+        if (btn.dataset.action === 'delete') {
+          if (!confirm(`確定要刪除「${title}」嗎？此操作無法復原。`)) return;
+          const delRes = await fetch(`/api/articles?id=${id}`, { method: 'DELETE' });
+          if (delRes.ok) card.remove();
+          else alert('刪除失敗');
+          return;
+        }
+
+        if (btn.dataset.action === 'publish') {
+          btn.setAttribute('disabled', 'true');
+          const pubRes = await fetch(`/api/articles?id=${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'published' }),
+          });
+          if (pubRes.ok) {
+            card.classList.add('is-published');
+            btn.style.display = 'none';
+            (card.querySelector('[data-action="delete"]') as HTMLElement).style.display = 'none';
+            const note = card.querySelector('.publish-note') as HTMLElement;
+            note.style.display = 'inline';
+            note.innerHTML = `已發佈 → <a href="/post/${encodeURIComponent(card.dataset.slug || '')}" target="_blank">查看</a>`;
+          } else {
+            btn.removeAttribute('disabled');
+            alert('發佈失敗');
+          }
+        }
+      });
+    }
+
+    init();
+  </script>
+</AdminLayout>
