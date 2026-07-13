@@ -18,6 +18,10 @@ export interface Article {
   related_chunk_title: string | null;
   content_type: 'signal' | 'deep-dive' | 'field-note' | 'decision-card';
   authorship: 'original' | 'ai' | 'translation';
+  // 產製來源（admin-only,前台不顯示）
+  created_via: string | null;
+  gen_model: string | null;
+  ingest_ip: string | null;
   decision_status: 'adopt' | 'trial' | 'watch' | 'avoid';
   impact_level: 'low' | 'medium' | 'high';
   confidence: number;
@@ -117,6 +121,9 @@ export async function listPublishedArticles(
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
     authorship: r.authorship,
+    created_via: r.created_via ?? null,
+    gen_model: r.gen_model ?? null,
+    ingest_ip: r.ingest_ip ?? null,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -207,6 +214,9 @@ export async function getFeaturedArticle(db: D1Database): Promise<ArticleWithMet
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
     authorship: r.authorship,
+    created_via: r.created_via ?? null,
+    gen_model: r.gen_model ?? null,
+    ingest_ip: r.ingest_ip ?? null,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -263,6 +273,9 @@ export async function getArticleBySlug(db: D1Database, slug: string): Promise<Ar
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
     authorship: r.authorship,
+    created_via: r.created_via ?? null,
+    gen_model: r.gen_model ?? null,
+    ingest_ip: r.ingest_ip ?? null,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -438,6 +451,9 @@ export async function listAllArticles(db: D1Database): Promise<ArticleWithMeta[]
     related_chunk_title: r.related_chunk_title,
     content_type: r.content_type,
     authorship: r.authorship,
+    created_via: r.created_via ?? null,
+    gen_model: r.gen_model ?? null,
+    ingest_ip: r.ingest_ip ?? null,
     decision_status: r.decision_status,
     impact_level: r.impact_level,
     confidence: r.confidence,
@@ -480,6 +496,9 @@ export async function createArticle(
     related_chunk_title?: string;
     content_type?: Article['content_type'];
     authorship?: Article['authorship'];
+    created_via?: string;
+    gen_model?: string;
+    ingest_ip?: string;
     decision_status?: Article['decision_status'];
     impact_level?: Article['impact_level'];
     confidence?: number;
@@ -496,8 +515,8 @@ export async function createArticle(
 ): Promise<number> {
   const now = new Date().toISOString();
   const result = await db.prepare(`
-    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, related_chunk_url, related_chunk_title, content_type, authorship, decision_status, impact_level, confidence, event_key, category_id, status, is_featured, is_pinned, reading_time, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, related_chunk_url, related_chunk_title, content_type, authorship, created_via, gen_model, ingest_ip, decision_status, impact_level, confidence, event_key, category_id, status, is_featured, is_pinned, reading_time, published_at, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     data.slug,
     data.title,
@@ -511,6 +530,9 @@ export async function createArticle(
     data.related_chunk_title || null,
     data.content_type || 'signal',
     data.authorship || 'ai',
+    data.created_via || null,
+    data.gen_model || null,
+    data.ingest_ip || null,
     data.decision_status || 'watch',
     data.impact_level || 'medium',
     Math.min(100, Math.max(0, data.confidence ?? 70)),
@@ -556,6 +578,9 @@ export async function updateArticle(
     related_chunk_title?: string;
     content_type?: Article['content_type'];
     authorship?: Article['authorship'];
+    created_via?: string;
+    gen_model?: string;
+    ingest_ip?: string;
     decision_status?: Article['decision_status'];
     impact_level?: Article['impact_level'];
     confidence?: number;
@@ -586,6 +611,9 @@ export async function updateArticle(
     related_chunk_title: data.related_chunk_title,
     content_type: data.content_type,
     authorship: data.authorship,
+    created_via: data.created_via,
+    gen_model: data.gen_model,
+    ingest_ip: data.ingest_ip,
     decision_status: data.decision_status,
     impact_level: data.impact_level,
     confidence: data.confidence,

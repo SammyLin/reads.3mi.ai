@@ -147,6 +147,7 @@ export const POST: APIRoute = async (context) => {
     source_url: body.source_url,
     source_type: body.source_type,
     authorship: ['original', 'ai', 'translation'].includes(body.authorship) ? body.authorship : 'original',
+    created_via: 'admin',
     category_id: body.category_id,
     series_id: body.series_id ?? null,
     series_order: body.series_order || 0,
@@ -176,6 +177,10 @@ export const PUT: APIRoute = async (context) => {
 
   const body = await context.request.json() as any;
   const updates: any = { ...body };
+  // 產製來源欄位唯讀:只在建立/ingest 時寫入,admin 編輯不可改
+  delete updates.created_via;
+  delete updates.gen_model;
+  delete updates.ingest_ip;
   if (body.content_md !== undefined && !body.content_html) {
     updates.content_html = renderMarkdown(body.content_md);
     if (!body.excerpt) {
