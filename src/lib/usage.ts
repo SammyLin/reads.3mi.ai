@@ -24,7 +24,7 @@ export const USAGE_PROVIDERS = ['claude', 'codex'] as const;
 export async function getUsageSummary(
   db: D1Database,
   provider: 'claude' | 'codex',
-  limitDays = 371 // 53 週，蓋滿 52 週熱力圖
+  limitDays = 30 // 統計視窗：近 30 天
 ): Promise<UsageSummary | null> {
   const result = await db.prepare(`
     SELECT day, tokens, cost_usd, messages, models

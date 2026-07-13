@@ -1409,11 +1409,11 @@ button:active, .action-primary:active, .action-secondary:active, .lead-signal:ac
 .lead-signal p { color: var(--text-secondary); font-size: 15px; line-height: 1.75; max-width: 56ch; }
 .lead-signal small { display: block; margin-top: 28px; color: var(--text-muted); }
 /* 今日觀點 — 低調版：不做大 hero，資訊密度優先；align-self 避免被右欄撐高 */
-.lead-signal--calm { min-height: auto; padding: 24px 26px; align-self: start; }
-.lead-signal--calm > span { margin-bottom: 12px; }
-.lead-signal--calm h2 { font-size: clamp(1.3rem, 2.6vw, 1.7rem); margin-bottom: 10px; }
-.lead-signal--calm p { font-size: 14px; }
-.lead-signal--calm small { margin-top: 14px; }
+.lead-signal--calm { min-height: auto; padding: 18px 22px; align-self: start; }
+.lead-signal--calm > span { margin-bottom: 8px; }
+.lead-signal--calm h2 { font-size: clamp(1.2rem, 2.4vw, 1.55rem); margin-bottom: 8px; }
+.lead-signal--calm p { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lead-signal--calm small { margin-top: 10px; }
 
 /* 置頂精選 — 首頁右欄 */
 .pinned-rail { padding: 20px 22px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-secondary); align-self: start; }
@@ -1459,7 +1459,7 @@ button:active, .action-primary:active, .action-secondary:active, .lead-signal:ac
 
 /* LLM 用量卡（80aj 式熱力圖，縮小版：跟著今日觀點走） */
 .usage-cards { display: grid; gap: 12px; }
-.usage-card { padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-secondary); }
+.usage-card { padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-secondary); }
 .usage-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
 .usage-head h2 { display: flex; align-items: center; gap: 7px; font-size: 14px; letter-spacing: -.01em; }
 .usage-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--u-accent); }
@@ -1469,18 +1469,16 @@ button:active, .action-primary:active, .action-secondary:active, .lead-signal:ac
 .usage-stats div { text-align: center; }
 .usage-stats strong { display: block; font-size: clamp(1rem, 1.8vw, 1.25rem); letter-spacing: -.02em; line-height: 1.15; }
 .usage-stats span { color: var(--text-muted); font-size: 11px; }
-.usage-months { display: grid; gap: 2px; margin-bottom: 3px; font-size: 9px; color: var(--text-muted); line-height: 1.2; }
-.usage-months span { grid-row: 1; white-space: nowrap; overflow: hidden; }
-.usage-heatmap { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 2px; margin-bottom: 6px; }
-.usage-heatmap i, .usage-scale i { display: block; aspect-ratio: 1; border-radius: 3px; background: var(--bg-tertiary); }
-.usage-heatmap .u-void { visibility: hidden; }
+.usage-heatmap { display: grid; grid-template-rows: 1fr; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; margin-bottom: 5px; }
+.usage-heatmap i { display: block; aspect-ratio: 1; max-height: 18px; border-radius: 3px; background: var(--bg-tertiary); }
+.usage-range { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 10px; margin-bottom: 10px; }
+.usage-scale-inline { display: inline-flex; align-items: center; gap: 3px; }
+.usage-scale-inline i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--bg-tertiary); }
 .usage-card .u1 { background: color-mix(in srgb, var(--u-accent) 25%, var(--bg-tertiary)); }
 .usage-card .u2 { background: color-mix(in srgb, var(--u-accent) 45%, var(--bg-tertiary)); }
 .usage-card .u3 { background: color-mix(in srgb, var(--u-accent) 65%, var(--bg-tertiary)); }
 .usage-card .u4 { background: color-mix(in srgb, var(--u-accent) 85%, var(--bg-tertiary)); }
 .usage-card .u5 { background: color-mix(in srgb, var(--u-accent) 100%, black 12%); }
-.usage-scale { display: flex; align-items: center; justify-content: flex-end; gap: 3px; color: var(--text-muted); font-size: 10px; margin-bottom: 10px; }
-.usage-scale i { width: 9px; }
 .usage-modelbar { display: flex; height: 6px; border-radius: 999px; overflow: hidden; margin-bottom: 8px; background: var(--bg-tertiary); }
 .usage-modelbar i { background: var(--u-accent); min-width: 2px; }
 .usage-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--text-secondary); font-size: 11px; }
