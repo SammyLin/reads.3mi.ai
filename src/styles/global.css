@@ -1426,9 +1426,36 @@ button:active, .action-primary:active, .action-secondary:active, .lead-signal:ac
 .pinned-rail li a svg { flex-shrink: 0; margin-top: 3px; color: var(--accent); }
 .pinned-rail li small { display: block; margin-top: 3px; color: var(--text-muted); font-size: 12px; }
 
-/* 首頁左欄：今日觀點 + 用量卡疊在同一欄 */
-.lead-col { display: grid; gap: 14px; align-self: start; min-width: 0; }
-.lead-col .lead-signal--calm { align-self: stretch; }
+/* 首頁單一 grid：桌機「觀點+實錄 | 置頂」同列，頻道/最新全寬；手機實錄+置頂沉底 */
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr);
+  gap: 14px 20px;
+  align-items: start;
+  grid-template-areas:
+    "lead side"
+    "usage side"
+    "channel channel"
+    "latest latest";
+}
+.home-grid > .lead-signal--calm { grid-area: lead; }
+.home-grid > .usage-cards { grid-area: usage; }
+.home-grid > .pinned-rail { grid-area: side; }
+.home-grid > .channel-strip { grid-area: channel; margin-top: 28px; }
+.home-grid > #latest { grid-area: latest; min-width: 0; }
+@media (max-width: 760px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "lead"
+      "channel"
+      "latest"
+      "usage"
+      "side";
+  }
+  .home-grid > .channel-strip { margin-top: 8px; }
+  .home-grid > .usage-cards { margin-top: 32px; }
+}
 
 /* LLM 用量卡（80aj 式熱力圖，縮小版：跟著今日觀點走） */
 .usage-cards { display: grid; gap: 12px; }
@@ -1442,6 +1469,8 @@ button:active, .action-primary:active, .action-secondary:active, .lead-signal:ac
 .usage-stats div { text-align: center; }
 .usage-stats strong { display: block; font-size: clamp(1rem, 1.8vw, 1.25rem); letter-spacing: -.02em; line-height: 1.15; }
 .usage-stats span { color: var(--text-muted); font-size: 11px; }
+.usage-months { display: grid; gap: 2px; margin-bottom: 3px; font-size: 9px; color: var(--text-muted); line-height: 1.2; }
+.usage-months span { grid-row: 1; white-space: nowrap; overflow: hidden; }
 .usage-heatmap { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 2px; margin-bottom: 6px; }
 .usage-heatmap i, .usage-scale i { display: block; aspect-ratio: 1; border-radius: 3px; background: var(--bg-tertiary); }
 .usage-heatmap .u-void { visibility: hidden; }
