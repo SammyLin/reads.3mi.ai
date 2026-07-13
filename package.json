@@ -10,6 +10,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "wrangler:dev": "wrangler pages dev ./dist --d1=DB --r2=BUCKET --compatibility-date=2026-01-01",
+    "push:usage": "node scripts/push-usage.mjs",
     "db:migrate:local": "wrangler d1 execute news-3mi-db --local --file=migrations/0001_init.sql",
     "db:migrate:remote": "wrangler d1 execute news-3mi-db --remote --file=migrations/0001_init.sql",
     "db:seed:local": "wrangler d1 execute news-3mi-db --local --file=migrations/seed.sql"

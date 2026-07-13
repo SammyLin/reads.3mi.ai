@@ -11,11 +11,11 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
 });
 
-function ingestAuthorized(request: Request, expected: string | undefined) {
-  if (!expected) return false;
+function ingestAuthorized(request: Request, expectedKeys: (string | undefined)[]) {
   const auth = request.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : request.headers.get('x-openclaw-key') || '';
-  return token.length === expected.length && token === expected;
+  if (!token) return false;
+  return expectedKeys.some((expected) => expected && token.length === expected.length && token === expected);
 }
 
 /** 公開讀取：首頁用量卡資料 */
@@ -34,7 +34,7 @@ export const GET: APIRoute = async (context) => {
 /** 私有寫入：本機 pipeline / 後台 upsert 日資料 */
 export const POST: APIRoute = async (context) => {
   const env = getEnv(context);
-  const viaKey = ingestAuthorized(context.request, env.OPENCLAW_NEWS_INGEST_KEY || env.OPENCLAW_INGEST_KEY);
+  const viaKey = ingestAuthorized(context.request, [env.USAGE_INGEST_KEY, env.OPENCLAW_NEWS_INGEST_KEY, env.OPENCLAW_INGEST_KEY]);
   const viaAdmin = !viaKey && (await isAuthenticated(context.request, env.JWT_SECRET));
   if (!viaKey && !viaAdmin) return json({ error: 'Unauthorized' }, 401);
 

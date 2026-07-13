@@ -187,7 +187,9 @@ function whyRead(article: ArticleWithMeta) {
               <div class="usage-stats">
                 <div><strong>{formatCost(summary.totals.cost_usd)}</strong><span>花費</span></div>
                 <div><strong>{formatTokens(summary.totals.tokens)}</strong><span>tokens</span></div>
-                <div><strong>{formatCount(summary.totals.messages)}</strong><span>messages</span></div>
+                {summary.totals.messages > 0
+                  ? <div><strong>{formatCount(summary.totals.messages)}</strong><span>messages</span></div>
+                  : <div><strong>{summary.active_days}</strong><span>活躍日</span></div>}
                 <div><strong>{summary.streak} 天</strong><span>連續</span></div>
               </div>
               <div class="usage-heatmap" role="img" aria-label={`${label} 每日用量熱力圖`}>
