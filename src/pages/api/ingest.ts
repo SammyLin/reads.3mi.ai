@@ -79,7 +79,8 @@ export const POST: APIRoute = async (context) => {
     content_type: ['signal','deep-dive','field-note','decision-card'].includes(body.content_type) ? body.content_type : 'signal',
     authorship: ['original','ai','translation'].includes(body.authorship) ? body.authorship : 'ai',
     // 產製來源(admin-only,前台不顯示):誰送進來的 + 用什麼模型寫的 + 呼叫端 IP(server 自抓,非 payload 欄位)
-    created_via: String(body.created_via || body.agent || 'openclaw').slice(0, 100),
+    // created_via 不預設值——多個 agent 共用這支 API(hermes-agent / openclaw / claude-code / codex),猜了會誤標
+    created_via: body.created_via || body.agent ? String(body.created_via || body.agent).slice(0, 100) : undefined,
     gen_model: body.gen_model || body.model ? String(body.gen_model || body.model).slice(0, 100) : undefined,
     ingest_ip: context.request.headers.get('cf-connecting-ip') || undefined,
     decision_status: ['adopt','trial','watch','avoid'].includes(body.decision_status) ? body.decision_status : 'watch',
@@ -96,6 +97,7 @@ export const POST: APIRoute = async (context) => {
   // 提醒 OpenClaw：沒給真圖時退回抓 og:image 或自動產生封面；沒報模型時提醒補。
   const warningList: string[] = [];
   if (coverSource === 'generated') warningList.push('未提供 cover_image 且原文無 og:image：已自動產生品牌封面。建議帶原文 og:image 以取得真實縮圖。');
+  if (!data.created_via) warningList.push('未提供 created_via：請帶送件 agent 名稱（hermes-agent / openclaw / claude-code / codex…），供 admin 追蹤產製來源。');
   if (!data.gen_model) warningList.push('未提供 gen_model：請在 payload 帶產文模型 id（如 claude-sonnet-5），供 admin 追蹤產製來源。');
   const warnings = warningList.length ? warningList : undefined;
 
