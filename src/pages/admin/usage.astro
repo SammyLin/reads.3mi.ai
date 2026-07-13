@@ -1,0 +1,163 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getDB } from '../../lib/db';
+import { isAuthenticated } from '../../lib/auth';
+import { formatTokens, formatCost } from '../../lib/usage';
+import { Flame } from 'lucide-astro';
+
+const isAuthed = await isAuthenticated(Astro.request, (Astro.locals as any)?.runtime?.env?.JWT_SECRET);
+if (!isAuthed) return Astro.redirect('/admin/login');
+
+let rows: any[] = [];
+try {
+  const db = getDB(Astro);
+  const result = await db.prepare(`
+    SELECT provider, day, tokens, cost_usd, messages, models, updated_at
+    FROM usage_daily
+    ORDER BY day DESC, provider ASC
+    LIMIT 60
+  `).all();
+  rows = (result.results as any[]) || [];
+} catch (e) {
+  console.error(e);
+}
+---
+
+<AdminLayout>
+  <header class="admin-page-head">
+    <h1><Flame size={22} /> LLM 用量</h1>
+    <a href="/admin" class="btn btn-ghost">← 返回列表</a>
+  </header>
+
+  <div class="card usage-admin-card">
+    <h2>手動補一天</h2>
+    <p class="usage-admin-hint">
+      正常情況由本機 pipeline 走 <code>POST /api/usage</code>（Bearer ingest key）批次推；這裡只做單日修正。
+    </p>
+    <form id="usage-form">
+      <div class="usage-form-grid">
+        <label>Provider
+          <select id="u-provider">
+            <option value="claude">claude</option>
+            <option value="codex">codex</option>
+          </select>
+        </label>
+        <label>日期 <input type="date" id="u-day" required /></label>
+        <label>Tokens <input type="number" id="u-tokens" min="0" value="0" /></label>
+        <label>花費 USD <input type="number" id="u-cost" min="0" step="0.01" value="0" /></label>
+        <label>Messages <input type="number" id="u-messages" min="0" value="0" /></label>
+      </div>
+      <label class="usage-models-label">Models JSON（&#123;"model-id": tokens&#125;）
+        <textarea id="u-models" rows="2" placeholder='{"claude-opus-4-8": 123456}'></textarea>
+      </label>
+      <div class="usage-form-actions">
+        <button type="submit" class="btn btn-primary">寫入</button>
+        <span id="u-result"></span>
+      </div>
+    </form>
+  </div>
+
+  <div class="card usage-admin-card">
+    <h2>近 60 筆</h2>
+    {rows.length === 0 ? (
+      <p class="usage-admin-hint">還沒有用量資料。</p>
+    ) : (
+      <table class="usage-table">
+        <thead>
+          <tr><th>日期</th><th>Provider</th><th>Tokens</th><th>花費</th><th>Messages</th><th>更新</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr>
+              <td>{r.day}</td>
+              <td>{r.provider}</td>
+              <td>{formatTokens(Number(r.tokens) || 0)}</td>
+              <td>{formatCost(Number(r.cost_usd) || 0)}</td>
+              <td>{r.messages}</td>
+              <td>{String(r.updated_at || '').slice(0, 10)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+
+  <style>
+    .admin-page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .admin-page-head h1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .admin-page-head h1 :global(svg) { color: var(--accent); }
+    .usage-admin-card { padding: 24px; margin-bottom: 20px; }
+    .usage-admin-card:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
+    .usage-admin-card h2 { font-size: 16px; margin-bottom: 10px; }
+    .usage-admin-hint { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }
+    .usage-admin-hint code { font-size: 12px; }
+    .usage-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .usage-form-grid label, .usage-models-label { display: block; font-size: 12px; color: var(--text-muted); }
+    .usage-form-grid input, .usage-form-grid select, .usage-models-label textarea { width: 100%; margin-top: 4px; }
+    .usage-models-label { margin-bottom: 12px; }
+    .usage-form-actions { display: flex; align-items: center; gap: 12px; }
+    #u-result { font-size: 13px; }
+    .usage-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .usage-table th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid var(--border); }
+    .usage-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .usage-table tr:last-child td { border-bottom: 0; }
+  </style>
+
+  <script>
+    const form = document.getElementById('usage-form') as HTMLFormElement;
+    const result = document.getElementById('u-result')!;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      result.textContent = '寫入中...';
+
+      let models: Record<string, number> = {};
+      const modelsRaw = (document.getElementById('u-models') as HTMLTextAreaElement).value.trim();
+      if (modelsRaw) {
+        try { models = JSON.parse(modelsRaw); } catch {
+          result.textContent = 'Models JSON 格式錯誤';
+          return;
+        }
+      }
+
+      const body = {
+        provider: (document.getElementById('u-provider') as HTMLSelectElement).value,
+        days: [{
+          day: (document.getElementById('u-day') as HTMLInputElement).value,
+          tokens: Number((document.getElementById('u-tokens') as HTMLInputElement).value) || 0,
+          cost_usd: Number((document.getElementById('u-cost') as HTMLInputElement).value) || 0,
+          messages: Number((document.getElementById('u-messages') as HTMLInputElement).value) || 0,
+          models,
+        }],
+      };
+
+      const res = await fetch('/api/usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        result.textContent = '已寫入';
+        setTimeout(() => window.location.reload(), 600);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        result.textContent = (err as any).error || '寫入失敗';
+      }
+    });
+  </script>
+</AdminLayout>
