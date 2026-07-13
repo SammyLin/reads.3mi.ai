@@ -84,7 +84,8 @@ export const POST: APIRoute = async (context) => {
     event_key: body.event_key ? slugify(String(body.event_key)) : undefined,
     category_id: catId,
     status: body.status === 'draft' ? 'draft' as const : 'published' as const,
-    is_featured: body.is_featured ? 1 : 0,
+    // is_featured / is_pinned 是編輯位（今日觀點 / 置頂），只能在 /admin 設定——
+    // ingest 不寫入，避免 pipeline 佔首頁主位、re-ingest 洗掉站長勾的旗標。
     tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
   };
 

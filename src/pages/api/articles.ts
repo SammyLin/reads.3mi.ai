@@ -80,6 +80,14 @@ const handleGet: APIRoute = async (context) => {
     });
   }
 
+  if (url.searchParams.get('pinned') === '1') {
+    const limit = clampInt(url.searchParams.get('limit'), 5, 1, 20);
+    const articles = (await listPublishedArticles(db, { pinnedOnly: true, limit })).map(summarizeArticle);
+    return new Response(JSON.stringify({ articles }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   if (url.searchParams.get('featured') === '1') {
     const article = await getFeaturedArticle(db);
     return new Response(JSON.stringify({ articles: article ? [summarizeArticle(article)] : [] }), {
@@ -144,6 +152,7 @@ export const POST: APIRoute = async (context) => {
     series_order: body.series_order || 0,
     status: body.status || 'draft',
     is_featured: body.is_featured ? 1 : 0,
+    is_pinned: body.is_pinned ? 1 : 0,
     tags: body.tags || [],
   });
 
@@ -175,6 +184,9 @@ export const PUT: APIRoute = async (context) => {
   }
   if (body.is_featured !== undefined) {
     updates.is_featured = body.is_featured ? 1 : 0;
+  }
+  if (body.is_pinned !== undefined) {
+    updates.is_pinned = body.is_pinned ? 1 : 0;
   }
   if (updates.authorship !== undefined && !['original', 'ai', 'translation'].includes(updates.authorship)) {
     delete updates.authorship;

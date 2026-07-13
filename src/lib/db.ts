@@ -27,6 +27,7 @@ export interface Article {
   series_order: number;
   status: 'draft' | 'published';
   is_featured: number;
+  is_pinned: number;
   view_count: number;
   reading_time: number;
   published_at: string | null;
@@ -58,7 +59,7 @@ export interface ArticleWithMeta extends Article {
 /** 取得發佈文章列表（依發布時間倒序） */
 export async function listPublishedArticles(
   db: D1Database,
-  opts: { categorySlug?: string; tagSlug?: string; authorship?: string; excludeSlug?: string; limit?: number; offset?: number; orderBy?: 'date' | 'views' } = {}
+  opts: { categorySlug?: string; tagSlug?: string; authorship?: string; excludeSlug?: string; pinnedOnly?: boolean; limit?: number; offset?: number; orderBy?: 'date' | 'views' } = {}
 ): Promise<ArticleWithMeta[]> {
   const limit = opts.limit ?? 20;
   const offset = opts.offset ?? 0;
@@ -87,6 +88,9 @@ export async function listPublishedArticles(
   if (opts.excludeSlug) {
     sql += ` AND a.slug != ?`;
     params.push(opts.excludeSlug);
+  }
+  if (opts.pinnedOnly) {
+    sql += ` AND a.is_pinned = 1`;
   }
 
   sql += opts.orderBy === 'views'
@@ -120,6 +124,7 @@ export async function listPublishedArticles(
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
+    is_pinned: r.is_pinned ?? 0,
     view_count: r.view_count,
     reading_time: r.reading_time,
     published_at: r.published_at,
@@ -209,6 +214,7 @@ export async function getFeaturedArticle(db: D1Database): Promise<ArticleWithMet
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
+    is_pinned: r.is_pinned ?? 0,
     view_count: r.view_count,
     reading_time: r.reading_time,
     published_at: r.published_at,
@@ -264,6 +270,7 @@ export async function getArticleBySlug(db: D1Database, slug: string): Promise<Ar
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
+    is_pinned: r.is_pinned ?? 0,
     view_count: r.view_count,
     reading_time: r.reading_time,
     published_at: r.published_at,
@@ -438,6 +445,7 @@ export async function listAllArticles(db: D1Database): Promise<ArticleWithMeta[]
     category_id: r.category_id,
     status: r.status,
     is_featured: r.is_featured,
+    is_pinned: r.is_pinned ?? 0,
     view_count: r.view_count,
     reading_time: r.reading_time,
     published_at: r.published_at,
@@ -481,14 +489,15 @@ export async function createArticle(
     series_order?: number;
     status?: 'draft' | 'published';
     is_featured?: number;
+    is_pinned?: number;
     reading_time?: number;
     tags?: string[];
   }
 ): Promise<number> {
   const now = new Date().toISOString();
   const result = await db.prepare(`
-    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, related_chunk_url, related_chunk_title, content_type, authorship, decision_status, impact_level, confidence, event_key, category_id, status, is_featured, reading_time, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (slug, title, excerpt, content_md, content_html, cover_image, source_url, source_type, related_chunk_url, related_chunk_title, content_type, authorship, decision_status, impact_level, confidence, event_key, category_id, status, is_featured, is_pinned, reading_time, published_at, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     data.slug,
     data.title,
@@ -509,6 +518,7 @@ export async function createArticle(
     data.category_id || null,
     data.status || 'draft',
     data.is_featured || 0,
+    data.is_pinned || 0,
     data.reading_time || estimateReadingTime(data.content_md),
     data.status === 'published' ? now : null,
     now,
@@ -555,6 +565,7 @@ export async function updateArticle(
     series_order?: number;
     status?: 'draft' | 'published';
     is_featured?: number;
+    is_pinned?: number;
     reading_time?: number;
     tags?: string[];
   }
@@ -584,6 +595,7 @@ export async function updateArticle(
     series_order: data.series_order,
     status: data.status,
     is_featured: data.is_featured,
+    is_pinned: data.is_pinned,
     reading_time: data.reading_time,
   };
 

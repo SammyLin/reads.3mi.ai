@@ -1,6 +1,6 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { PenLine, Star } from 'lucide-astro';
+import { PenLine, Star, Pin } from 'lucide-astro';
 ---
 
 <AdminLayout>
@@ -62,7 +62,10 @@ import { PenLine, Star } from 'lucide-astro';
       <textarea id="content_md" rows="20" required style="font-family: var(--font-mono); font-size: 13px;"></textarea>
     </div>
     <div class="form-group">
-      <label class="admin-check"><input id="is_featured" type="checkbox"> <Star size={16} /> <span>設為焦點文章</span></label>
+      <label class="admin-check"><input id="is_featured" type="checkbox"> <Star size={16} /> <span>今日觀點（首頁主位，取最新一篇）</span></label>
+    </div>
+    <div class="form-group">
+      <label class="admin-check"><input id="is_pinned" type="checkbox"> <Pin size={16} /> <span>置頂（首頁右欄）</span></label>
     </div>
     <div id="form-error" class="admin-form-error"></div>
     <div class="admin-form-actions">
@@ -207,6 +210,7 @@ import { PenLine, Star } from 'lucide-astro';
         series_id: parseInt(document.getElementById('series').value) || null,
         series_order: parseInt(document.getElementById('series_order').value) || 0,
         is_featured: document.getElementById('is_featured').checked ? 1 : 0,
+        is_pinned: document.getElementById('is_pinned').checked ? 1 : 0,
         status,
       };
       const errorEl = document.getElementById('form-error');

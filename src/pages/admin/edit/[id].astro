@@ -4,7 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getArticleBySlug, listCategories, listSeries, getDB } from '../../../lib/db';
 import { isAuthenticated } from '../../../lib/auth';
-import { Pencil, Upload } from 'lucide-astro';
+import { Pencil, Upload, Pin } from 'lucide-astro';
 
 const isAuthed = await isAuthenticated(Astro.request, (Astro.locals as any)?.runtime?.env?.JWT_SECRET);
 if (!isAuthed) return Astro.redirect('/admin/login');
@@ -132,7 +132,12 @@ if (!article) {
         <div class="form-group">
           <label class="admin-check">
             <input type="checkbox" id="is_featured" name="is_featured" checked={!!article.is_featured} />
-            <span>設為焦點文章</span>
+            <span>今日觀點（首頁主位，取最新一篇）</span>
+          </label>
+          <label class="admin-check" style="margin-top: 8px;">
+            <input type="checkbox" id="is_pinned" name="is_pinned" checked={!!article.is_pinned} />
+            <Pin size={16} />
+            <span>置頂（首頁右欄）</span>
           </label>
         </div>
 
@@ -270,6 +275,7 @@ if (!article) {
         series_order: fd.get('series_order') ? parseInt(fd.get('series_order') as string) : 0,
         tags: (fd.get('tags') as string || '').split(',').map((s) => s.trim()).filter(Boolean),
         is_featured: (document.getElementById('is_featured') as HTMLInputElement).checked,
+        is_pinned: (document.getElementById('is_pinned') as HTMLInputElement).checked,
       };
 
       try {

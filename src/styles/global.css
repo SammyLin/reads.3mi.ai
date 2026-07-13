@@ -1153,6 +1153,37 @@ label {
   cursor: not-allowed;
   opacity: 0.42;
 }
+/* SSR 連結版分頁（與 button 同外觀） */
+.pagination a,
+.pagination span.active,
+.pagination .page-disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  border-bottom-color: var(--border);
+}
+.pagination a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pagination span.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+.pagination .page-disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
 .pagination-summary {
   margin-left: auto;
   color: var(--text-muted);
@@ -1377,6 +1408,24 @@ button:active, .action-primary:active, .action-secondary:active, .lead-signal:ac
 .lead-signal h2 { font-size: clamp(1.8rem,4vw,2.7rem); line-height: 1.16; letter-spacing: -.035em; margin-bottom: 18px; }
 .lead-signal p { color: var(--text-secondary); font-size: 15px; line-height: 1.75; max-width: 56ch; }
 .lead-signal small { display: block; margin-top: 28px; color: var(--text-muted); }
+/* 今日觀點 — 低調版：不做大 hero，資訊密度優先 */
+.lead-signal--calm { min-height: auto; padding: 24px 26px; }
+.lead-signal--calm > span { margin-bottom: 12px; }
+.lead-signal--calm h2 { font-size: clamp(1.3rem, 2.6vw, 1.7rem); margin-bottom: 10px; }
+.lead-signal--calm p { font-size: 14px; }
+.lead-signal--calm small { margin-top: 14px; }
+
+/* 置頂精選 — 首頁右欄 */
+.pinned-rail { padding: 20px 22px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-secondary); }
+.pinned-rail h2 { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 14px; }
+.pinned-rail ul { list-style: none; padding: 0; margin: 0; }
+.pinned-rail li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.pinned-rail li:last-child { border-bottom: 0; padding-bottom: 0; }
+.pinned-rail li a { display: flex; align-items: flex-start; gap: 6px; color: var(--text-primary); font-size: 14px; font-weight: 600; line-height: 1.45; border: 0; }
+.pinned-rail li a:hover { color: var(--accent); }
+.pinned-rail li a svg { flex-shrink: 0; margin-top: 3px; color: var(--accent); }
+.pinned-rail li small { display: block; margin-top: 3px; color: var(--text-muted); font-size: 12px; }
+
 .decision-guide { padding: 28px; border-radius: var(--radius-lg); background: var(--text-primary); color: var(--bg-primary); }
 .decision-guide .eyebrow { color: #facc15; margin-bottom: 18px; }
 .decision-guide h2 { font-size: 22px; letter-spacing: -.02em; margin-bottom: 18px; }
@@ -2058,16 +2107,17 @@ a {
 .authorship-translation { color: #0f766e; background: #ccfbf1; }
 
 .authorship-tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.authorship-tabs button {
+.authorship-tabs button,
+.authorship-tabs a {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
   background: transparent; color: var(--text-secondary);
   font-size: 13px; font-weight: 600; cursor: pointer;
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
-.authorship-tabs button svg { width: 14px; height: 14px; }
-.authorship-tabs button:hover { border-color: var(--text-muted); color: var(--text-primary); }
-.authorship-tabs button.active { background: var(--text-primary); color: var(--bg-primary); border-color: var(--text-primary); }
+.authorship-tabs button svg, .authorship-tabs a svg { width: 14px; height: 14px; }
+.authorship-tabs button:hover, .authorship-tabs a:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.authorship-tabs button.active, .authorship-tabs a.active { background: var(--text-primary); color: var(--bg-primary); border-color: var(--text-primary); }
 
 /* 文章頁：譯文出處 / AI 揭露 */
 .authorship-note {
