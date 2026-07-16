@@ -2222,21 +2222,68 @@ a {
   font-size: 28px; font-weight: 800; letter-spacing: -.03em;
   margin: 56px 0 18px; padding-bottom: 12px;
   border-bottom: 2px solid var(--text-primary);
+  scroll-margin-top: 90px;
 }
 .markdown-content h2 {
   font-size: 23px; font-weight: 700; letter-spacing: -.02em;
   margin: 48px 0 16px; padding: 2px 0 2px 14px;
   border-left: 4px solid var(--accent); border-bottom: 0;
+  scroll-margin-top: 90px;
 }
 .markdown-content h3 {
   font-size: 18px; font-weight: 700;
   margin: 34px 0 12px; padding: 0; border: 0;
+  scroll-margin-top: 90px;
 }
 .markdown-content h3::before { content: '#'; color: var(--accent); font-weight: 800; margin-right: 8px; }
 .markdown-content h4 {
   font-size: 15px; font-weight: 700; color: var(--text-secondary);
   letter-spacing: .02em; margin: 28px 0 10px;
 }
+
+/* ===== 文章目錄（TOC）：窄螢幕內嵌,寬螢幕變成側邊 sticky 欄 ===== */
+.article-toc {
+  margin: 28px 0 40px;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-tertiary);
+}
+.article-toc strong {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 12px;
+}
+.article-toc strong svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--accent); }
+.article-toc ul {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.article-toc li.toc-level-3 { padding-left: 18px; }
+.article-toc a {
+  color: var(--text-secondary); border-bottom: 0; font-size: 14px; line-height: 1.6;
+}
+.article-toc a:hover { color: var(--accent); }
+
+/* 寬螢幕且右側留白夠時,JS 會把 .article-toc 搬到 .article-layout 裡當 flex 側欄(sticky),
+   內文(.article-shell)仍維持自己原本的寬度,不受側欄擠壓 */
+.article-layout.is-split {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 56px;
+  max-width: none;
+}
+.article-layout.is-split .article-shell { margin: 0; }
+.article-layout.is-split .article-toc {
+  flex: 0 0 240px;
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  margin: 0;
+}
+.content-full:has(.article-layout.is-split) { max-width: none; width: 100%; }
 
 /* ===== 推薦文章（文章頁尾） ===== */
 .related-posts { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border); }

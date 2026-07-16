@@ -39,6 +39,11 @@ const ogImage = new URL(rawCover, Astro.url.origin).toString();
   <script is:inline define:vars={{ slug }}>
     window.__ARTICLE_SLUG__ = slug;
   </script>
+
+  <style is:global>
+    /* 目錄搬到側邊(.is-split)時,外層 container 也要放寬,避免側欄被裁切或擠壓內文 */
+    body:has(#article-layout.is-split) main.container { max-width: 1160px; }
+  </style>
 </BaseLayout>
 
 <script>
@@ -47,6 +52,7 @@ const LUCIDE_ICONS = {
   'pen-line': '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
   sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
   languages: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+  list: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
 };
 
 function lucide(name) {
@@ -168,6 +174,7 @@ async function loadArticle() {
 
     container.innerHTML = `
       <div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div>
+      <div class="article-layout" id="article-layout">
       <article class="prose article-shell">
         <header class="article-header">
           <div class="article-kicker">
@@ -193,7 +200,9 @@ async function loadArticle() {
 
         ${translationNote}
 
-        <div class="markdown-content">${article.content_html || '<p>內容待補。</p>'}</div>
+        <nav class="article-toc" id="article-toc" hidden aria-label="目錄"><strong>${lucide('list')}文章目錄</strong><ul id="article-toc-list"></ul></nav>
+
+        <div class="markdown-content" id="markdown-content">${article.content_html || '<p>內容待補。</p>'}</div>
 
         ${disclosure}
 
@@ -216,8 +225,10 @@ async function loadArticle() {
           <div class="related-grid" id="related-grid"></div>
         </section>
 
-      </article>`;
+      </article>
+      </div>`;
 
+    buildToc();
     loadChunkPractice(article);
     loadRelated(article);
 
@@ -236,6 +247,73 @@ async function loadArticle() {
     console.error('Failed to load article:', err);
     container.innerHTML = '<div class="card text-secondary" style="padding: 40px; text-align: center;">載入失敗。</div>';
   }
+}
+
+// 目錄：從 markdown-content 的 h2/h3 產生錨點清單,點擊平滑捲動
+function slugifyHeading(text) {
+  const slug = (text || '').trim().toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'section';
+}
+
+function buildToc() {
+  const layout = document.getElementById('article-layout');
+  const shell = document.querySelector('.article-shell');
+  const toc = document.getElementById('article-toc');
+  const list = document.getElementById('article-toc-list');
+  const content = document.getElementById('markdown-content');
+  if (!layout || !shell || !toc || !list || !content) return;
+
+  const headings = Array.from(content.querySelectorAll('h2, h3'));
+  if (headings.length < 2) return;
+
+  const used = new Set();
+  const items = headings.map((h) => {
+    let id = slugifyHeading(h.textContent);
+    if (used.has(id)) {
+      let i = 2;
+      while (used.has(`${id}-${i}`)) i++;
+      id = `${id}-${i}`;
+    }
+    used.add(id);
+    h.id = id;
+    return { id, text: h.textContent || '', level: h.tagName === 'H3' ? 3 : 2 };
+  });
+
+  list.innerHTML = items.map((it) =>
+    `<li class="toc-level-${it.level}"><a href="#${it.id}">${escapeHtml(it.text)}</a></li>`
+  ).join('');
+  toc.hidden = false;
+
+  list.addEventListener('click', (e) => {
+    const a = e.target.closest('a');
+    if (!a) return;
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    history.pushState(null, '', `#${id}`);
+  });
+
+  // 右側留白夠寬才把目錄搬到側邊(sticky 跟著捲動),不夠就放回內文原位,絕不擠壓內文寬度
+  const positionToc = () => {
+    const shellWidth = shell.getBoundingClientRect().width || shell.offsetWidth;
+    const gap = 56;
+    const railWidth = 240;
+    const shouldFloat = window.innerWidth >= shellWidth + gap + railWidth + 160;
+    const isFloating = layout.classList.contains('is-split');
+    if (shouldFloat && !isFloating) {
+      layout.classList.add('is-split');
+      layout.appendChild(toc);
+    } else if (!shouldFloat && isFloating) {
+      layout.classList.remove('is-split');
+      shell.insertBefore(toc, content);
+    }
+  };
+  positionToc();
+  window.addEventListener('resize', positionToc);
 }
 
 function escapeHtml(s) {
