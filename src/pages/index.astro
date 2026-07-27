@@ -50,18 +50,25 @@ try {
 
 const HEATMAP_DAYS = 90;
 
-const usageCards = (usage.filter(Boolean) as UsageSummary[]).map((summary) => ({
+// 兩張熱力圖對齊到同一結束日：取各家最後一筆資料中最新的那天，晚的那家當錨點
+const usageSummaries = usage.filter(Boolean) as UsageSummary[];
+const sharedEndDay = usageSummaries
+  .map((s) => s.days[s.days.length - 1].day)
+  .sort()
+  .pop() as string | undefined;
+
+const usageCards = usageSummaries.map((summary) => ({
   summary,
   label: summary.provider === 'claude' ? 'Claude API · 燒 token 實錄' : 'Codex · 燒 token 實錄',
   accent: summary.provider === 'claude' ? '#f97316' : '#0d9488',
-  ...buildHeatmap(summary),
+  ...buildHeatmap(summary, sharedEndDay),
 }));
 
 // 熱力圖：近 3 個月，45 欄小方框自動換行；level 0-5 依當日 tokens 相對最大值
-function buildHeatmap(summary: UsageSummary) {
+function buildHeatmap(summary: UsageSummary, endDay?: string) {
   const byDay = new Map(summary.days.map((d) => [d.day, d.tokens]));
   const max = Math.max(1, ...summary.days.map((d) => d.tokens));
-  const lastDay = summary.days[summary.days.length - 1].day;
+  const lastDay = endDay || summary.days[summary.days.length - 1].day;
   const end = new Date(`${lastDay}T00:00:00Z`);
   const cells: { day: string; level: number; tokens: number }[] = [];
   for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
