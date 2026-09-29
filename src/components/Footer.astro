@@ -1,4 +1,5 @@
 ---
+import { Rss } from 'lucide-astro';
 const year = new Date().getFullYear();
 // 與其他 3mi 站共用的頁尾(參考 putguard SiteFooter),lucide 沒有品牌圖示所以自帶 path
 const social = [
@@ -35,6 +36,7 @@ const products = [
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={s.path} /></svg>
           </a>
         ))}
+        <a href="/rss.xml" aria-label="RSS" title="RSS"><Rss /></a>
       </div>
     </div>
     <div class="foot-more">
