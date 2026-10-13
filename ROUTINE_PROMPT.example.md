@@ -90,6 +90,7 @@ curl -sX POST "https://reads.3mi.ai/api/ingest" \
   "source_type": "來源名稱，如 Simon Willison / Claude Blog / Hacker News",
   "category_id": 1,
   "event_key": "這件事的英文 slug，小寫連字號，如 navier-stokes-openai-priority-dispute",
+  "slug": "文章網址名稱，跟 event_key 填一樣的值",
   "content_type": "signal",
   "decision_status": "watch",
   "impact_level": "medium",
@@ -102,6 +103,8 @@ curl -sX POST "https://reads.3mi.ai/api/ingest" \
 }
 ```
 
+**`slug` 一定要帶，而且要跟 `event_key` 一樣。** 不帶的話站上會用中文標題自動產生，中文字全被丟掉，變成 `openai`、`cloudflare`、`10-11` 這種網址。更危險的是，`/api/ingest` 遇到同名 slug 會**直接覆寫**那篇舊文章。送出前確認這個 slug 不在第 1 步的已發佈清單裡，撞名就在後面加識別字，例如 `-2026-10`。
+
 `category_id`：1=AI 模型/Agent、2=架構、3=開發者工具、4=實戰教學、5=安全、6=生活反思。
 `content_type` 與 `decision_status` 的判斷準則在 `STYLE.md` 最後一節。
 
@@ -109,7 +112,7 @@ curl -sX POST "https://reads.3mi.ai/api/ingest" \
 
 `is_featured` 與 `is_pinned` 是首頁編輯位，只有山米能設，你不要帶。
 
-成功會回 `{"success":true,"action":"created",...}`。**回 `"action":"updated"` 是事故** —— 表示這個 `source_url` 已經存在，你剛才覆寫掉一篇既有文章。發生的話立刻在回報裡講清楚被覆寫的是哪一篇。
+成功會回 `{"success":true,"action":"created",...}`。**回 `"action":"updated"` 是事故** —— 表示這個 `source_url` 或 `slug` 已經存在，你剛才覆寫掉一篇既有文章。發生的話立刻在回報裡講清楚被覆寫的是哪一篇。
 
 ## 7. 回報
 
