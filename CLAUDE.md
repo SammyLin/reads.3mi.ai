@@ -27,4 +27,6 @@ See [DEPLOY.md](./DEPLOY.md) — build then `wrangler pages deploy ./dist --proj
 
 沒有 Worker、沒有 cron。曾經有過一個 `news-cron` Worker 做 DeepSeek 排名＋寫稿，拆掉的理由記在 `ROUTINE.md`。
 
-註：claude.com 沒有 RSS（2026-09 實測 `/blog/rss.xml`、`/feed`、`/atom.xml` 全 404），改讀 `sitemap.xml` 的 `lastmod` 再逐篇抓 og 中繼資料。
+註：claude.com、claude.dev、anthropic.com 都沒有 RSS（2026-09／10 實測），改讀 `sitemap.xml` 的 `lastmod` 再逐篇抓 og 中繼資料。Cloudflare Blog 每 7 天最多 2 篇（2026-10 統計曾佔一半）。
+
+每週一 02:00 UTC 另有一個「reads.3mi.ai 每週檢討」routine（`trig_01Y7dTrPcBUAbEvvsQ2MievR`）：回顧上週文章的來源分布、概念、硬規則、事實，最多提 3 條改 `ROUTINE_PROMPT` / `STYLE.md` 的建議。只回報、不改東西；要不要採用由站長決定。

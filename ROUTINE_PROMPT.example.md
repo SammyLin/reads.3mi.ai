@@ -26,13 +26,21 @@ curl -s "https://reads.3mi.ai/api/pending-review" \
 | Hacker News（AI 泛搜） | `https://hnrss.org/newest?q=AI+OR+LLM+OR+Claude+OR+agent&points=150&count=20` |
 | Hacker News（Anthropic/Cursor/Codex） | `https://hnrss.org/newest?q=Anthropic+OR+Cursor+OR+Codex&points=100&count=20` |
 | Simon Willison | `https://simonwillison.net/atom/everything/` |
-| Cloudflare Blog | `https://blog.cloudflare.com/rss/` |
+| Cloudflare Blog | `https://blog.cloudflare.com/rss/`（有配額，見下） |
 | OpenAI News | `https://openai.com/news/rss.xml` |
-| Claude Blog | 見下 |
+| Claude Blog | `https://claude.com/sitemap.xml`（見下） |
+| Claude Developers Blog | `https://claude.dev/sitemap.xml`（見下） |
+| Anthropic News / Engineering | `https://www.anthropic.com/sitemap.xml`（見下） |
 
-claude.com 沒有 RSS（`/blog/rss.xml`、`/feed`、`/atom.xml` 都是 404）。改抓 `https://claude.com/sitemap.xml`，篩 `loc` 符合 `https://claude.com/blog/<slug>` 且沒有語系前綴、`lastmod` 在 48 小時內的，再逐篇抓頁面拿 `og:title` / `og:description`。
+claude.com、claude.dev、anthropic.com 都沒有 RSS，一律讀 sitemap，篩 `lastmod` 在 48 小時內的，再逐篇抓頁面拿 `og:title` / `og:description`：
 
-`openai.com/news/rss.xml` 會回一千多筆全站歷史，靠日期篩，不要整包當今天的新聞。
+- claude.com：`loc` 符合 `https://claude.com/blog/<slug>`，沒有語系前綴。
+- claude.dev：`loc` 符合 `https://claude.dev/blog/<slug>/`。
+- anthropic.com：`loc` 符合 `https://www.anthropic.com/news/<slug>` 或 `/engineering/<slug>`。engineering 的文章通常最容易拆出概念，同樣有料時優先。
+
+`openai.com/news/rss.xml` 會回一千多筆全站歷史。先用 `pubDate` 篩出 48 小時內的再讀，不要整包讀。
+
+**Cloudflare 有配額。** 先看第 1 步的已發佈清單：`published_at` 在最近 7 天、`source_url` 是 `blog.cloudflare.com` 的已經有 2 篇，今天就不挑 Cloudflare。沒滿額也只收跟 AI、agent、LLM 有關的文章，純產品上線、價格調整、網路效能跳過。（Cloudflare 幾乎每天發文，不設限會佔掉一半版面。）
 
 ## 3. 挑一篇
 
