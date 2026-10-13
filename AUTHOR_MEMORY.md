@@ -13,6 +13,7 @@ OpenClaw 想用新的個人素材時,必須列入執行報告的「需要站長�
 
 - 日常使用 Claude Code 與 OpenClaw agent 維運自己的網站與內容 pipeline(Cloudflare Pages / D1 / R2)。
 - 2026-07-02 建站 news.3mi.ai 那天剛好是**颱風假**,多出一整天在家,才有時間用多 agent 方式從 SPEC 寫到上線(站長 2026-07-12 確認,已用於 id 30 文章)。
+- 自己裝了 Claude Code mods：skins(hellosverre,用 solarized)與 reflect-mod;2026-10-13 在本機實測 blast-radius 攔 `rm -rf`、被 `bash -c` 繞過,並把同一攔截寫成 settings hook 與 mod 比較(站長 2026-10-13 確認,用於 id 447)。
 
 ## 明確不是事實(禁止寫)
 
