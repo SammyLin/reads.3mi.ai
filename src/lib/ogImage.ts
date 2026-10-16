@@ -20,7 +20,7 @@ function wrapTitle(title: string, perLine = 15, maxLines = 3): string[] {
 
 /** 產生一張 1200x675 品牌封面 SVG（cream 底 + 分類色 + 分類名 + 標題 + 站名）。 */
 export function buildCoverSvg(opts: { title: string; color?: string; label?: string }): string {
-  const color = opts.color || '#ca8a04';
+  const color = opts.color || '#007f73';
   const label = opts.label || '';
   const lines = wrapTitle(opts.title || '', 15, 3);
   const startY = 300 - (lines.length - 1) * 42;
@@ -32,16 +32,16 @@ export function buildCoverSvg(opts: { title: string; color?: string; label?: str
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="${color}" stop-opacity="0.16"/>
-      <stop offset="1" stop-color="#faf8f5" stop-opacity="1"/>
+      <stop offset="1" stop-color="#f7faf9" stop-opacity="1"/>
     </linearGradient>
   </defs>
-  <rect width="1200" height="675" fill="#faf8f5"/>
+  <rect width="1200" height="675" fill="#f7faf9"/>
   <rect width="1200" height="675" fill="url(#bg)"/>
   <rect x="0" y="0" width="12" height="675" fill="${color}"/>
   ${label ? `<rect x="90" y="96" rx="8" width="${Math.min(360, 44 + label.length * 30)}" height="46" fill="${color}" fill-opacity="0.14"/>
   <text x="112" y="128" font-family="'Noto Sans TC',system-ui,sans-serif" font-size="26" font-weight="700" fill="${color}">${xmlEscape(label)}</text>` : ''}
-  <text font-family="'Noto Sans TC',system-ui,sans-serif" font-size="72" font-weight="800" fill="#292524" letter-spacing="-1.5">${titleTspans}</text>
-  <text x="90" y="600" font-family="'Noto Sans TC',ui-monospace,monospace" font-size="30" font-weight="700" fill="#57534e">reads.3mi.ai</text>
+  <text font-family="'Noto Sans TC',system-ui,sans-serif" font-size="72" font-weight="800" fill="#111614" letter-spacing="-1.5">${titleTspans}</text>
+  <text x="90" y="600" font-family="'Noto Sans TC',ui-monospace,monospace" font-size="30" font-weight="700" fill="#4a5653">reads.3mi.ai</text>
   <circle cx="1080" cy="560" r="8" fill="${color}"/>
 </svg>`;
 }
@@ -54,27 +54,27 @@ export function buildCoverSvgPaths(
   font: { getPath: (text: string, x: number, y: number, size: number) => { toPathData: (d: number) => string } },
   opts: { title: string; color?: string; label?: string },
 ): string {
-  const color = opts.color || '#ca8a04';
+  const color = opts.color || '#007f73';
   const label = opts.label || '';
   const lines = wrapTitle(opts.title || '', 15, 3);
   const startY = 300 - (lines.length - 1) * 42;
   const titlePaths = lines
-    .map((ln, i) => `<path d="${font.getPath(ln, 90, startY + i * 88, 72).toPathData(2)}" fill="#292524"/>`)
+    .map((ln, i) => `<path d="${font.getPath(ln, 90, startY + i * 88, 72).toPathData(2)}" fill="#111614"/>`)
     .join('\n  ');
   const labelPath = label
     ? `<rect x="90" y="96" rx="8" width="${Math.min(360, 44 + label.length * 30)}" height="46" fill="${color}" fill-opacity="0.14"/>
   <path d="${font.getPath(label, 112, 128, 26).toPathData(2)}" fill="${color}"/>`
     : '';
-  const sitePath = `<path d="${font.getPath('reads.3mi.ai', 90, 600, 30).toPathData(2)}" fill="#57534e"/>`;
+  const sitePath = `<path d="${font.getPath('reads.3mi.ai', 90, 600, 30).toPathData(2)}" fill="#4a5653"/>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="${color}" stop-opacity="0.16"/>
-      <stop offset="1" stop-color="#faf8f5" stop-opacity="1"/>
+      <stop offset="1" stop-color="#f7faf9" stop-opacity="1"/>
     </linearGradient>
   </defs>
-  <rect width="1200" height="675" fill="#faf8f5"/>
+  <rect width="1200" height="675" fill="#f7faf9"/>
   <rect width="1200" height="675" fill="url(#bg)"/>
   <rect x="0" y="0" width="12" height="675" fill="${color}"/>
   ${labelPath}

@@ -56,7 +56,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         return;
       }
       container.innerHTML = '<div class="series-grid">' + topics.map((topic: any) => `
-        <a href="/category/${escapeHtml(topic.slug)}" class="card series-card" style="--topic-color:${escapeHtml(topic.color || '#ca8a04')}">
+        <a href="/category/${escapeHtml(topic.slug)}" class="card series-card" style="--topic-color:${escapeHtml(topic.color || '#007f73')}">
           ${coverThumb({ ...topic, category: topic }, 'card-thumb series-card-thumb')}
           <div class="series-card-count">${topic.article_count} 篇文章</div>
           <h2>${escapeHtml(topic.name)}</h2>

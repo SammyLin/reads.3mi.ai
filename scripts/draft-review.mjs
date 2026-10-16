@@ -76,13 +76,13 @@ const page = `<!doctype html>
 <title>reads.3mi.ai 草稿審稿台</title>
 <style>
 :root {
-  --canvas:#faf8f5; --surface:#fff; --surface-subtle:#f5f3ef;
-  --border:#f0ece5; --border-strong:#e7e5e4;
-  --text:#292524; --text-2:#57534e; --text-3:#a8a29e;
-  --brand:#ca8a04; --brand-hover:#a16207;
-  --action:#292524; --on-action:#faf8f5; --danger:#b91c1c;
-  --shadow-sm:0 1px 2px rgba(41,37,36,.04);
-  --shadow-md:0 1px 2px rgba(41,37,36,.04),0 8px 24px rgba(41,37,36,.06);
+  --canvas:#f7faf9; --surface:#fff; --surface-subtle:#eef3f2;
+  --border:#e2eae8; --border-strong:#d5e0dd;
+  --text:#111614; --text-2:#4a5653; --text-3:#8a9794;
+  --brand:#007f73; --brand-hover:#006b61;
+  --action:#111614; --on-action:#f7faf9; --danger:#b91c1c;
+  --shadow-sm:0 1px 2px rgba(17,22,20,.04);
+  --shadow-md:0 1px 2px rgba(17,22,20,.04),0 8px 24px rgba(17,22,20,.06);
   --ease:cubic-bezier(.32,.72,0,1);
   color-scheme: light;
 }

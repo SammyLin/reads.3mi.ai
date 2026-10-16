@@ -8,21 +8,21 @@ Each repo mirrors these token VALUES in its own token layer (Tailwind `@theme` /
 
 | Role | Value |
 | --- | --- |
-| canvas (page bg) | `#faf8f5` |
+| canvas (page bg) | `#f7faf9` |
 | surface (card/input) | `#ffffff` |
-| surface-subtle | `#f5f3ef` |
-| border (hairline) | `#f0ece5` |
-| border-strong | `#e7e5e4` |
-| text | `#292524` |
-| text-secondary | `#57534e` |
-| text-muted | `#a8a29e` |
-| brand (gold) | `#ca8a04` |
-| brand-hover | `#a16207` |
-| brand-subtle | `#fef9c3` |
-| brand-light | `#facc15` |
-| action (primary btn) | `#292524` |
-| action-hover | `#ca8a04` |
-| on-action | `#faf8f5` |
+| surface-subtle | `#eef3f2` |
+| border (hairline) | `#e2eae8` |
+| border-strong | `#d5e0dd` |
+| text | `#111614` |
+| text-secondary | `#4a5653` |
+| text-muted | `#8a9794` |
+| brand (gold) | `#007f73` |
+| brand-hover | `#006b61` |
+| brand-subtle | `#e0f5f2` |
+| brand-light | `#00b8a9` |
+| action (primary btn) | `#111614` |
+| action-hover | `#007f73` |
+| on-action | `#f7faf9` |
 | success | `#15803d` |
 | danger | `#b91c1c` |
 
@@ -48,9 +48,9 @@ Status colors express state only. Category/context colors are for dots + thin ed
 ## Depth (shadow) — layered, low-opacity, brown ink
 
 ```
---shadow-sm: 0 1px 2px rgba(41,37,36,.04);
---shadow-md: 0 1px 2px rgba(41,37,36,.04), 0 8px 24px rgba(41,37,36,.06);
---shadow-lg: 0 2px 6px rgba(41,37,36,.05), 0 18px 40px rgba(41,37,36,.10);
+--shadow-sm: 0 1px 2px rgba(17,22,20,.04);
+--shadow-md: 0 1px 2px rgba(17,22,20,.04), 0 8px 24px rgba(17,22,20,.06);
+--shadow-lg: 0 2px 6px rgba(17,22,20,.05), 0 18px 40px rgba(17,22,20,.10);
 ```
 
 Cards rest on `--shadow-sm/md`, lift to the next level on hover. Never heavy generic shadows.

@@ -23,7 +23,7 @@ function loadFont(requestUrl: string): Promise<Font> {
 export const GET: APIRoute = async (context) => {
   const url = new URL(context.request.url);
   const title = url.searchParams.get('title') || 'reads.3mi.ai';
-  const color = url.searchParams.get('color') || '#ca8a04';
+  const color = url.searchParams.get('color') || '#007f73';
   const label = url.searchParams.get('label') || '';
 
   // 文字轉向量路徑：社群爬蟲（FB/LINE）沒有中文字型，<text> 會亂碼

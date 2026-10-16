@@ -79,9 +79,9 @@ news-3mi/
 
 跟隨共用設計系統 [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)。
 
-- 背景 `#faf8f5`（cream）/ 卡面 `#ffffff`
-- 文字 `#292524` / `#57534e`
-- 品牌 `#ca8a04`（gold）/ hover `#a16207`
+- 背景 `#f7faf9`（cream）/ 卡面 `#ffffff`
+- 文字 `#111614` / `#4a5653`
+- 品牌 `#007f73`（gold）/ hover `#006b61`
 - 分類色盤：AI 紫 / 架構藍 / 工具綠 / 實戰橘 / 安全紅 / 生活粉
 
 ## API Endpoints

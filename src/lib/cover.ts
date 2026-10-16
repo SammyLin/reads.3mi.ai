@@ -22,7 +22,7 @@ export function coverThumb(article: CoverArticle, className = 'card-thumb'): str
   if (cover) {
     return `<div class="${className}"><img src="${escapeUrl(cover)}" alt="" loading="lazy"></div>`;
   }
-  const color = article?.category?.color || '#ca8a04';
+  const color = article?.category?.color || '#007f73';
   const icon = categoryIconSvg(article?.category?.slug, 44);
   return `<div class="${className} card-thumb-fallback" style="--c:${escapeUrl(color)}">${icon}</div>`;
 }
