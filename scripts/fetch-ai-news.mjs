@@ -21,7 +21,7 @@
 *   BRAVE_API_KEY           — Brave search API key
 *   OPENAI_API_KEY          — OpenAI API for summarization (optional)
 *
-* Cron via openclaw: see ~/.openclaw/cron/fetch-ai-news.json
+* 原本由 OpenClaw cron 排程(~/.openclaw/cron/fetch-ai-news.json);OpenClaw 已在 2026-11-18 移除,目前沒有排程,要跑請手動執行
 */
 
 import { setTimeout as sleep } from 'node:timers/promises';

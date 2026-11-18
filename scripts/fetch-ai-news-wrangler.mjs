@@ -15,7 +15,8 @@ import { join } from 'node:path';
 
 const ACCOUNT_ID = '782ea99a9b61fe5dcef072f99d341a85';
 const DATABASE_ID = '29ccc16c-4e31-4e56-bbff-b8966623f1f9';
-const PROJECT_DIR = '/Users/openbot/.openclaw/workspace/projects/news-3mi';
+// news.3mi.ai 的本機 clone(2026-11-18 從 ~/.openclaw/workspace/projects/news-3mi 搬過來)
+const PROJECT_DIR = process.env.NEWS_3MI_DIR || '/Volumes/3mi/code/news.3mi.ai';
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
